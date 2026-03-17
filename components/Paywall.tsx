@@ -77,7 +77,7 @@ export default function Paywall({ onClose }: PaywallProps) {
               Current Plan
             </button>
             <div className="flex flex-col gap-3">
-              {["Daily Horoscope", "Basic Charts", "10 AI Consultations/mo"].map((f) => (
+              {["Daily Horoscope", "Basic Charts", "15 AI Consultations/mo"].map((f) => (
                 <div key={f} className="text-sm font-medium flex gap-3 text-slate-700">
                   <CheckCircleIcon className="text-primary w-5 h-5 shrink-0" /> {f}
                 </div>

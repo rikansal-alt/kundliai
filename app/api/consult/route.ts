@@ -7,11 +7,6 @@ import { safeLog } from "@/lib/logger";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
-
 interface PlanetPosition {
   sign: string;
   house: number;
@@ -112,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     const limit = await checkRateLimit({
       key: rateLimitKey,
-      limit: guestId ? 3 : 10,
+      limit: guestId ? 3 : 15,
       windowSeconds: guestId ? 86400 * 365 : 86400 * 30, // guest: lifetime, registered: per month
     });
 

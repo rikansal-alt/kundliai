@@ -215,6 +215,9 @@ function ConsultContent() {
       {showCounter && consultLimit < 999 && (
         <div className="text-center py-1.5 shrink-0" style={{ fontSize: 11, color: "#B07840" }}>
           {Math.max(0, consultLimit - consultsUsed)} of {consultLimit} consultations remaining
+          {consultLimit - consultsUsed <= 3 && consultLimit - consultsUsed > 0 && (
+            <span className="ml-1 text-primary font-semibold"> · Unlimited plan coming soon</span>
+          )}
         </div>
       )}
 
@@ -293,7 +296,7 @@ function ConsultContent() {
         }}
       >
         {/* Consult limit banner */}
-        {consultLimitReached && (
+        {consultLimitReached && isGuestRef.current && (
           <button
             onClick={() => setShowLoginPrompt(true)}
             className="w-full py-2.5 px-4 rounded-xl text-center text-sm font-semibold text-white"
@@ -301,6 +304,11 @@ function ConsultContent() {
           >
             You have used {FREE_CONSULT_LIMIT} free consultations · Sign in for more
           </button>
+        )}
+        {consultsUsed >= consultLimit && !isGuestRef.current && (
+          <div className="w-full py-2.5 px-4 rounded-xl text-center text-sm font-medium text-slate-600 bg-slate-100 border border-slate-200">
+            Monthly limit reached · Unlimited Gold plan coming soon
+          </div>
         )}
         {/* Chips */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
