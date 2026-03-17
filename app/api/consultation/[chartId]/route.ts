@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Consultation from "@/lib/models/Consultation";
 import { Types } from "mongoose";
+import { safeLog } from "@/lib/logger";
 
 /**
  * GET /api/consultation/[chartId]
@@ -34,7 +35,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, consultations });
   } catch (err) {
-    console.error("consultation/[chartId] error:", err);
+    safeLog("error", "consultation/[chartId] error:", { error: String(err) });
     return NextResponse.json({ error: "Failed to fetch consultations" }, { status: 500 });
   }
 }

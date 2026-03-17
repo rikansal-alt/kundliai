@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Chart from "@/lib/models/Chart";
+import { safeLog } from "@/lib/logger";
+import { sanitizeString } from "@/lib/sanitizeMongo";
 
 /**
  * POST /api/chart/save
@@ -11,7 +13,10 @@ export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
-    const { userId, chartId, birthDetails, chartData } = await req.json();
+    const body = await req.json();
+    const userId = sanitizeString(body.userId, 100);
+    const chartId = body.chartId ? sanitizeString(body.chartId, 30) : undefined;
+    const { birthDetails, chartData } = body;
 
     if (!userId || !birthDetails) {
       return NextResponse.json({ error: "userId and birthDetails are required" }, { status: 400 });
@@ -35,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, chartId: chart._id.toString() });
   } catch (err) {
-    console.error("chart/save error:", err);
+    safeLog("error", "chart/save error:", { error: String(err) });
     return NextResponse.json({ error: "Failed to save chart" }, { status: 500 });
   }
 }

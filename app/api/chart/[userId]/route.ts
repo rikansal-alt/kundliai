@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Chart from "@/lib/models/Chart";
+import { safeLog } from "@/lib/logger";
 
 /**
  * GET /api/chart/[userId]
@@ -23,7 +24,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, chart });
   } catch (err) {
-    console.error("chart/[userId] error:", err);
+    safeLog("error", "chart/[userId] error:", { error: String(err) });
     return NextResponse.json({ error: "Failed to fetch chart" }, { status: 500 });
   }
 }

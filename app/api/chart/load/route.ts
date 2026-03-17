@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Chart from "@/lib/models/Chart";
+import { safeLog } from "@/lib/logger";
+import { escapeRegex, sanitizeString } from "@/lib/sanitizeMongo";
 
 /**
  * GET /api/chart/load?userId=googleId&name=DisplayName
@@ -11,8 +13,8 @@ import Chart from "@/lib/models/Chart";
  */
 export async function GET(req: NextRequest) {
   try {
-    const userId = req.nextUrl.searchParams.get("userId");
-    const name   = req.nextUrl.searchParams.get("name") ?? "";
+    const userId = sanitizeString(req.nextUrl.searchParams.get("userId"), 100);
+    const name   = sanitizeString(req.nextUrl.searchParams.get("name"), 50);
 
     if (!userId) {
       return NextResponse.json({ error: "userId required" }, { status: 400 });
@@ -26,7 +28,7 @@ export async function GET(req: NextRequest) {
     // 2. Fall back: find old-format chart by display name, then migrate it
     if (!chart && name) {
       // Case-insensitive match on the stored name
-      const firstName = name.split(" ")[0];
+      const firstName = escapeRegex(name.split(" ")[0]);
       chart = await Chart.findOneAndUpdate(
         {
           userId:              { $not: /^\d{15,}$/ }, // exclude existing googleId-format docs
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
       chart,
     });
   } catch (err) {
-    console.error("Chart load error:", err);
+    safeLog("error", "Chart load error:", { error: String(err) });
     return NextResponse.json({ error: "Failed to load chart" }, { status: 500 });
   }
 }

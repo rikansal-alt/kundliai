@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Consultation from "@/lib/models/Consultation";
 import { Types } from "mongoose";
+import { safeLog } from "@/lib/logger";
+import { sanitizeString } from "@/lib/sanitizeMongo";
 
 /**
  * POST /api/consultation/save
@@ -15,7 +17,11 @@ export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
-    const { chartId, userId, messages, consultationId } = await req.json();
+    const body = await req.json();
+    const chartId = sanitizeString(body.chartId, 30);
+    const userId = sanitizeString(body.userId, 100);
+    const consultationId = body.consultationId ? sanitizeString(body.consultationId, 30) : undefined;
+    const { messages } = body;
 
     if (!chartId || !userId || !messages?.length) {
       return NextResponse.json(
@@ -53,7 +59,7 @@ export async function POST(req: NextRequest) {
       consultationId: consultation!._id.toString(),
     });
   } catch (err) {
-    console.error("consultation/save error:", err);
+    safeLog("error", "consultation/save error:", { error: String(err) });
     return NextResponse.json({ error: "Failed to save consultation" }, { status: 500 });
   }
 }

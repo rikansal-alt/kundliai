@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
+import { safeLog } from "@/lib/logger";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const swe = require("swisseph");
@@ -222,7 +223,7 @@ export async function GET(req: NextRequest) {
       ],
     });
   } catch (err) {
-    console.error("Panchang error:", err);
-    return NextResponse.json({ error: "Failed", detail: String(err) }, { status: 500 });
+    safeLog("error", "Panchang error:", { error: String(err) });
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeLog } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
     const { plan } = await req.json();
 
     // Placeholder for Stripe / Razorpay integration
-    console.log(`Subscription request for plan: ${plan}`);
+    safeLog("info", "Subscription request", { plan });
 
     return NextResponse.json({
       success: true,
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
       plan,
     });
   } catch (error) {
-    console.error("Subscribe API error:", error);
+    safeLog("error", "Subscribe API error:", { error: String(error) });
     return NextResponse.json(
       { error: "Failed to process subscription" },
       { status: 500 }

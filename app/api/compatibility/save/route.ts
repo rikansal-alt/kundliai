@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Compatibility from "@/lib/models/Compatibility";
 import { Types } from "mongoose";
+import { safeLog } from "@/lib/logger";
+import { sanitizeString } from "@/lib/sanitizeMongo";
 
 /**
  * POST /api/compatibility/save
@@ -12,7 +14,9 @@ export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
-    const { userId, chartId, partner, partnerMoonSign, gunMilan } = await req.json();
+    const body = await req.json();
+    const userId = sanitizeString(body.userId, 100);
+    const { chartId, partner, partnerMoonSign, gunMilan } = body;
 
     if (!userId || !partner || !gunMilan) {
       return NextResponse.json(
@@ -38,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, compatibilityId: doc._id.toString() });
   } catch (err) {
-    console.error("compatibility/save error:", err);
+    safeLog("error", "compatibility/save error:", { error: String(err) });
     return NextResponse.json({ error: "Failed to save compatibility" }, { status: 500 });
   }
 }

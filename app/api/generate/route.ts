@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { calcVimshottariMahadasha, serialiseMahadashaResult } from "@/lib/mahadasha";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { BirthDetailsSchema } from "@/lib/validators";
+import { safeLog } from "@/lib/logger";
 
 // Native addon — must be server-only (Node.js runtime)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -129,19 +132,39 @@ function getRegionalChartStyle(
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, date, time, city, lat: reqLat, lng: reqLng } = await req.json();
-
-    if (!name || !date || !city) {
-      return NextResponse.json({ error: "name, date, and city are required" }, { status: 400 });
+    // ── Rate limit by IP ────────────────────────────────────────────────
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const limit = await checkRateLimit({
+      key: `generate:${ip}`,
+      limit: 5,
+      windowSeconds: 3600,
+    });
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Try again later." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+      );
     }
+
+    // ── Validate input ──────────────────────────────────────────────────
+    const body = await req.json();
+    const parsed = BirthDetailsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid input", details: parsed.error.flatten().fieldErrors },
+        { status: 400 },
+      );
+    }
+
+    const { name, date, time, city, lat: reqLat, lng: reqLng } = parsed.data;
 
     // ── 1. Resolve lat/lng — use provided coords or geocode city ──────────
     let lat: number, lng: number, locationName: string;
     let defaultChartStyle: "south-indian" | "north-indian" | "bengali" = "north-indian";
 
     if (reqLat !== undefined && reqLng !== undefined) {
-      lat = parseFloat(reqLat);
-      lng = parseFloat(reqLng);
+      lat = reqLat;
+      lng = reqLng;
       locationName = city;
       // Try to detect regional style from city string
       const nameParts = city.split(/[,\s]+/).map((s: string) => s.trim());
@@ -245,7 +268,7 @@ export async function POST(req: NextRequest) {
       const result = swe.swe_calc_ut(jd, planetId, FLAG);
 
       if (result.error) {
-        console.error(`Error calculating ${planetName}:`, result.error);
+        safeLog("error", `Error calculating ${planetName}:`, { error: String(result.error) });
         continue;
       }
 
@@ -341,10 +364,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, chart });
 
   } catch (err) {
-    console.error("generate route error:", err);
+    safeLog("error", "generate route error:", { error: String(err) });
     return NextResponse.json(
-      { error: "Failed to calculate chart", detail: String(err) },
-      { status: 500 }
+      { error: "Failed to calculate chart" },
+      { status: 500 },
     );
   }
 }

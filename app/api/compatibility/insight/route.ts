@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { safeLog } from "@/lib/logger";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -10,6 +12,20 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
  */
 export async function POST(req: NextRequest) {
   try {
+    // ── Rate limit by IP ────────────────────────────────────────────────
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const limit = await checkRateLimit({
+      key: `compat-insight:${ip}`,
+      limit: 10,
+      windowSeconds: 3600,
+    });
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Try again later." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+      );
+    }
+
     const {
       name1, moonSign1, nakshatra1,
       name2, moonSign2, nakshatra2,
@@ -61,7 +77,7 @@ Tone: warm, specific, never fear-inducing. Use the actual nakshatra and Moon sig
     const insight = (message.content[0] as { type: string; text: string }).text.trim();
     return NextResponse.json({ insight });
   } catch (err) {
-    console.error("compatibility/insight error:", err);
+    safeLog("error", "compatibility/insight error:", { error: String(err) });
     return NextResponse.json({ error: "Failed to generate insight" }, { status: 500 });
   }
 }

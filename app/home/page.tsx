@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef, ComponentType } from "react";
+import { Suspense, useState, useEffect, useRef, useCallback, ComponentType } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { SunIcon, PlanetIcon, RobotIcon, HandHeartIcon, BinocularsIcon, SparkleIcon } from "@phosphor-icons/react";
+import { SunIcon, MoonIcon, PlanetIcon, RobotIcon, HandHeartIcon, BinocularsIcon, SparkleIcon } from "@phosphor-icons/react";
+import useEmblaCarousel from "embla-carousel-react";
 import { migrateGuestData } from "@/lib/migrateGuestData";
 import SoftLoginPrompt from "@/components/SoftLoginPrompt";
 import ProfileSheet from "@/components/ProfileSheet";
@@ -92,6 +93,21 @@ function HomeContent() {
   const bhukti = chart?.mahadasha?.currentBhukti;
   const pct   = chart?.mahadasha?.percentElapsed ?? 65;
 
+  // ── Embla carousel ────────────────────────────────────────────────────────
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: false });
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setActiveSlide(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on("select", onSelect);
+    onSelect();
+    return () => { emblaApi.off("select", onSelect); };
+  }, [emblaApi, onSelect]);
 
   return (
     <div
@@ -185,50 +201,123 @@ function HomeContent() {
         </div>
       </header>
 
-      {/* ── Hero Card ── */}
+      {/* ── Hero Card Carousel ── */}
       <section className="px-6 py-4">
-        <div
-          className="rounded-2xl p-6 text-slate-900 shadow-md relative overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #FFF9E0 0%, #FFE566 55%, #F5C200 100%)",
-          }}
-        >
-          {/* Radial glow for depth */}
-          <div className="absolute inset-0 pointer-events-none" style={{
-            background: "radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.5) 0%, transparent 60%)",
-          }} />
-          {/* Large decorative circle top-right */}
-          <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full pointer-events-none" style={{
-            background: "radial-gradient(circle, rgba(214,136,10,0.18) 0%, transparent 70%)",
-          }} />
-          <div className="relative">
-            <div className="flex justify-between items-start mb-5">
-              <span className="bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-white/60 shadow-sm">
-                <SparkleIcon size={12} weight="fill" className="text-primary" /> Power Day
-              </span>
-              <SunIcon size={20} weight="thin" className="text-primary opacity-60" />
-            </div>
-            <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
-              &ldquo;Jupiter&apos;s influence strengthens your path today — a favourable time for new intentions and purposeful action.&rdquo;
-            </blockquote>
-            <div className="flex gap-2">
-              {[
-                { label: "Energy",  value: "High"   },
-                { label: "Focus",   value: "Sharp"  },
-                { label: "Caution", value: "Speech" },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="backdrop-blur-sm px-3 py-2 rounded-xl flex flex-col items-center flex-1 border"
-                  style={{ background: "rgba(255,255,255,0.45)", borderColor: "rgba(255,255,255,0.6)" }}
-                >
-                  <span className="text-[9px] uppercase font-bold tracking-wide" style={{ color: "rgba(120,80,0,0.65)" }}>{stat.label}</span>
-                  <span className="font-bold text-sm text-slate-800 mt-0.5">{stat.value}</span>
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-4" style={{ backfaceVisibility: "hidden" }}>
+            {/* Card 1 — Today's Main Prediction */}
+            <div
+              className="rounded-2xl p-6 text-slate-900 shadow-md relative overflow-hidden flex-[0_0_100%] min-w-0 cursor-pointer"
+              style={{ background: "linear-gradient(135deg, #FFF9E0 0%, #FFE566 55%, #F5C200 100%)" }}
+              onClick={() => router.push("/daily")}
+            >
+              <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.5) 0%, transparent 60%)" }} />
+              <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(214,136,10,0.18) 0%, transparent 70%)" }} />
+              <div className="relative">
+                <div className="flex justify-between items-start mb-5">
+                  <span className="bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-white/60 shadow-sm">
+                    <SparkleIcon size={12} weight="fill" className="text-primary" /> Power Day
+                  </span>
+                  <SunIcon size={20} weight="thin" className="text-primary opacity-60" />
                 </div>
-              ))}
+                <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
+                  &ldquo;Jupiter&apos;s influence strengthens your path today — a favourable time for new intentions and purposeful action.&rdquo;
+                </blockquote>
+                <div className="flex gap-2">
+                  {[
+                    { label: "Energy",  value: "High"   },
+                    { label: "Focus",   value: "Sharp"  },
+                    { label: "Caution", value: "Speech" },
+                  ].map((stat) => (
+                    <div key={stat.label} className="backdrop-blur-sm px-3 py-2 rounded-xl flex flex-col items-center flex-1 border" style={{ background: "rgba(255,255,255,0.45)", borderColor: "rgba(255,255,255,0.6)" }}>
+                      <span className="text-[9px] uppercase font-bold tracking-wide" style={{ color: "rgba(120,80,0,0.65)" }}>{stat.label}</span>
+                      <span className="font-bold text-sm text-slate-800 mt-0.5">{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2 — Evening Guidance */}
+            <div
+              className="rounded-2xl p-6 text-slate-900 shadow-md relative overflow-hidden flex-[0_0_100%] min-w-0 cursor-pointer"
+              style={{ background: "linear-gradient(135deg, #EDE9FE 0%, #C4B5FD 55%, #8B5CF6 100%)" }}
+              onClick={() => router.push("/daily")}
+            >
+              <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 85% 20%, rgba(255,255,255,0.4) 0%, transparent 60%)" }} />
+              <div className="absolute -bottom-10 -left-10 w-44 h-44 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)" }} />
+              <div className="relative">
+                <div className="flex justify-between items-start mb-5">
+                  <span className="bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-white/60 shadow-sm">
+                    <MoonIcon size={12} weight="fill" className="text-indigo-600" /> Evening
+                  </span>
+                  <MoonIcon size={20} weight="thin" className="text-indigo-500 opacity-60" />
+                </div>
+                <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
+                  &ldquo;Venus graces your evening — let creativity flow and cherish moments of beauty and connection.&rdquo;
+                </blockquote>
+                <div className="flex gap-2">
+                  {[
+                    { label: "Mood",     value: "Calm"    },
+                    { label: "Connect",  value: "Strong"  },
+                    { label: "Reflect",  value: "Deep"    },
+                  ].map((stat) => (
+                    <div key={stat.label} className="backdrop-blur-sm px-3 py-2 rounded-xl flex flex-col items-center flex-1 border" style={{ background: "rgba(255,255,255,0.45)", borderColor: "rgba(255,255,255,0.6)" }}>
+                      <span className="text-[9px] uppercase font-bold tracking-wide" style={{ color: "rgba(80,60,120,0.65)" }}>{stat.label}</span>
+                      <span className="font-bold text-sm text-slate-800 mt-0.5">{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3 — Tomorrow Preview */}
+            <div
+              className="rounded-2xl p-6 text-slate-900 shadow-md relative overflow-hidden flex-[0_0_100%] min-w-0 cursor-pointer"
+              style={{ background: "linear-gradient(135deg, #E0F2FE 0%, #7DD3FC 55%, #0EA5E9 100%)" }}
+              onClick={() => router.push("/daily")}
+            >
+              <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 15% 80%, rgba(255,255,255,0.4) 0%, transparent 60%)" }} />
+              <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 70%)" }} />
+              <div className="relative">
+                <div className="flex justify-between items-start mb-5">
+                  <span className="bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-white/60 shadow-sm">
+                    <SparkleIcon size={12} weight="fill" className="text-sky-600" /> Tomorrow
+                  </span>
+                  <SunIcon size={20} weight="thin" className="text-sky-500 opacity-60" />
+                </div>
+                <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
+                  &ldquo;Mercury rises strong tomorrow — expect clarity in communication and swift progress on pending matters.&rdquo;
+                </blockquote>
+                <div className="flex gap-2">
+                  {[
+                    { label: "Clarity",  value: "Peak"    },
+                    { label: "Action",   value: "Swift"   },
+                    { label: "Social",   value: "Active"  },
+                  ].map((stat) => (
+                    <div key={stat.label} className="backdrop-blur-sm px-3 py-2 rounded-xl flex flex-col items-center flex-1 border" style={{ background: "rgba(255,255,255,0.45)", borderColor: "rgba(255,255,255,0.6)" }}>
+                      <span className="text-[9px] uppercase font-bold tracking-wide" style={{ color: "rgba(0,80,120,0.65)" }}>{stat.label}</span>
+                      <span className="font-bold text-sm text-slate-800 mt-0.5">{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Dot indicators */}
+        <div className="flex justify-center gap-2 mt-3">
+          {[0, 1, 2].map((i) => (
+            <button
+              key={i}
+              className="w-2 h-2 rounded-full transition-colors"
+              style={{ background: activeSlide === i ? "#D4880A" : "rgba(212,136,10,0.25)" }}
+              onClick={() => emblaApi?.scrollTo(i)}
+            />
+          ))}
+        </div>
+        <p className="text-center text-[10px] text-slate-400 mt-1.5">Swipe for more predictions</p>
       </section>
 
       {/* ── No-chart prompt (only shown after load when localStorage is empty) ── */}

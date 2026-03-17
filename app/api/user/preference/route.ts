@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import User, { ChartStyle } from "@/lib/models/User";
+import { safeLog } from "@/lib/logger";
 
 const VALID_STYLES: ChartStyle[] = ["south-indian", "north-indian", "bengali"];
 
@@ -35,10 +36,10 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true, chartStyle: (updated as { chartStyle: string }).chartStyle });
   } catch (err) {
-    console.error("preference route error:", err);
+    safeLog("error", "preference route error:", { error: String(err) });
     return NextResponse.json(
-      { error: "Failed to save preference", detail: String(err) },
-      { status: 500 }
+      { error: "Failed to save preference" },
+      { status: 500 },
     );
   }
 }

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Chart from "@/lib/models/Chart";
+import { safeLog } from "@/lib/logger";
+import { sanitizeString } from "@/lib/sanitizeMongo";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { googleId, guestId, birthDetails, chartData, consultMessages } = body;
+    const googleId = sanitizeString(body.googleId, 100);
+    const guestId = body.guestId ? sanitizeString(body.guestId, 100) : undefined;
+    const { birthDetails, chartData, consultMessages } = body;
 
     if (!googleId || !birthDetails || !chartData) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -54,7 +58,7 @@ export async function POST(req: NextRequest) {
       consultMessages: consultMessages ?? [],
     });
   } catch (err) {
-    console.error("Migration error:", err);
+    safeLog("error", "Migration error:", { error: String(err) });
     return NextResponse.json({ error: "Migration failed" }, { status: 500 });
   }
 }

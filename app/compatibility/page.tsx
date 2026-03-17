@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeftIcon, ShareNetworkIcon, PlusIcon, StarIcon, UserIcon, CircleNotchIcon, WarningIcon, HandHeartIcon, SparkleIcon, MagicWandIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, ShareNetworkIcon, PlusIcon, StarIcon, UserIcon, CircleNotchIcon, WarningIcon, HandHeartIcon, SparkleIcon, MagicWandIcon, ArrowRightIcon } from "@phosphor-icons/react";
+import RemediesSheet from "@/components/RemediesSheet";
 import { useNavContext } from "@/context/NavContext";
 import {
   calcGunMilan,
@@ -138,6 +139,7 @@ export default function CompatibilityPage() {
   const [insight,         setInsight]         = useState<string>("");
   const [insightLoading,  setInsightLoading]  = useState(false);
   const [sharing,         setSharing]         = useState(false);
+  const [showRemedies,    setShowRemedies]    = useState(false);
   const shareCardRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<PartnerForm>({ name: "", dob: "", time: "", city: "" });
   const [cityCoords,      setCityCoords]      = useState<{ lat: number; lng: number } | null>(null);
@@ -889,6 +891,27 @@ export default function CompatibilityPage() {
           </p>
         </div>
       </div>
+
+      {/* ── View Remedies button ── */}
+      {gunMilan && (
+        <div className="px-4 pb-6">
+          <button
+            onClick={() => setShowRemedies(true)}
+            className="w-full py-3.5 rounded-xl border border-primary/30 text-primary text-sm font-semibold bg-white hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+          >
+            View Remedies &amp; Guidance <ArrowRightIcon size={16} weight="bold" />
+          </button>
+        </div>
+      )}
+
+      {/* ── Remedies bottom sheet ── */}
+      {gunMilan && (
+        <RemediesSheet
+          open={showRemedies}
+          onClose={() => setShowRemedies(false)}
+          koots={gunMilan.koots}
+        />
+      )}
 
       {/* ── Partner bottom sheet ── */}
       {showModal && (

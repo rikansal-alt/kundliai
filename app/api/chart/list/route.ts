@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Chart from "@/lib/models/Chart";
+import { safeLog } from "@/lib/logger";
+import { sanitizeString } from "@/lib/sanitizeMongo";
 
 /**
  * GET /api/chart/list?userId=xxx
@@ -8,7 +10,7 @@ import Chart from "@/lib/models/Chart";
  */
 export async function GET(req: NextRequest) {
   try {
-    const userId = req.nextUrl.searchParams.get("userId");
+    const userId = sanitizeString(req.nextUrl.searchParams.get("userId"), 100);
     if (!userId) {
       return NextResponse.json({ error: "userId required" }, { status: 400 });
     }
@@ -22,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ charts });
   } catch (err) {
-    console.error("chart/list error:", err);
+    safeLog("error", "chart/list error:", { error: String(err) });
     return NextResponse.json({ error: "Failed to list charts" }, { status: 500 });
   }
 }

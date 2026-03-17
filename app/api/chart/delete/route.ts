@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Chart from "@/lib/models/Chart";
 import { Types } from "mongoose";
+import { safeLog } from "@/lib/logger";
+import { sanitizeString } from "@/lib/sanitizeMongo";
 
 /**
  * DELETE /api/chart/delete
@@ -10,7 +12,9 @@ import { Types } from "mongoose";
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const { chartId, userId } = await req.json();
+    const body = await req.json();
+    const chartId = sanitizeString(body.chartId, 30);
+    const userId = sanitizeString(body.userId, 100);
     if (!chartId || !userId) {
       return NextResponse.json({ error: "chartId and userId required" }, { status: 400 });
     }
@@ -28,7 +32,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("chart/delete error:", err);
+    safeLog("error", "chart/delete error:", { error: String(err) });
     return NextResponse.json({ error: "Failed to delete chart" }, { status: 500 });
   }
 }
