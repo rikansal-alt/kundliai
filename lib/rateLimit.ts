@@ -17,6 +17,11 @@ export async function checkRateLimit({
   limit,
   windowSeconds,
 }: RateLimitConfig): Promise<RateLimitResult> {
+  // Skip rate limiting in development
+  if (process.env.NODE_ENV === "development") {
+    return { allowed: true, remaining: limit };
+  }
+
   const collection = (await db()).collection("ratelimits");
 
   const now = new Date();

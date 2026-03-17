@@ -1,4 +1,4 @@
-const CACHE_NAME = "jyotish-v1";
+const CACHE_NAME = "jyotish-v2";
 const STATIC_ASSETS = [
   "/",
   "/home",
