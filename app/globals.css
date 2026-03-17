@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Lexend", sans-serif;
+  --font-serif: "Fraunces", serif;
+
+  --color-primary: #d6880a;
+  --color-background-light: #f8f7f5;
+  --color-background-dark: #221b10;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-display), sans-serif;
+    background-color: #f8f7f5;
+    background-image: radial-gradient(rgba(214,136,10,0.055) 1px, transparent 1px);
+    background-size: 26px 26px;
+    color: #0f172a;
+  }
+}
+
+.fraunces-italic {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+}
+
+/* PWA / native feel */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  overflow: hidden;
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-touch-callout: none;
+}
+
+/* Safe area */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* No scrollbar */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Input fix — prevent iOS zoom */
+input, textarea, select {
+  font-size: 16px;
+}
+
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+button, a {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Page fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.page-enter {
+  animation: fadeIn 0.22s ease forwards;
+}
+
+/* Bottom sheet slide-up */
+@keyframes slideUp {
+  from { transform: translateX(-50%) translateY(100%); }
+  to   { transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUpSheet 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+/* Keyboard inset: keep scrollable areas above virtual keyboard on iOS/Android */
+@supports (padding-bottom: env(keyboard-inset-height)) {
+  .keyboard-aware {
+    padding-bottom: env(keyboard-inset-height, 0px);
+  }
+}
