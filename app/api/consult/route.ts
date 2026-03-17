@@ -86,8 +86,8 @@ export async function POST(req: NextRequest) {
 
     const limit = await checkRateLimit({
       key: rateLimitKey,
-      limit: guestId ? 3 : 20,
-      windowSeconds: guestId ? 86400 : 3600,
+      limit: guestId ? 3 : 10,
+      windowSeconds: guestId ? 86400 * 365 : 86400 * 30, // guest: lifetime, registered: per month
     });
 
     if (!limit.allowed) {

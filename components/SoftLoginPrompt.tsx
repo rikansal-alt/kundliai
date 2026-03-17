@@ -19,7 +19,7 @@ interface Props {
 const CONTENT: Record<SoftLoginTrigger, { title: string; body: string; cta: string; icon: React.ElementType }> = {
   consult_limit: {
     title: "You've used your free consultations",
-    body:  "Sign in free to get 20 AI consultations per month — your chart stays exactly as is.",
+    body:  "Sign in free to get 10 AI consultations per month — your chart stays exactly as is.",
     cta:   "Continue with Google",
     icon:  ChatCircleTextIcon,
   },

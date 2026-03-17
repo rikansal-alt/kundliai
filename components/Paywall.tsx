@@ -77,7 +77,7 @@ export default function Paywall({ onClose }: PaywallProps) {
               Current Plan
             </button>
             <div className="flex flex-col gap-3">
-              {["Daily Horoscope", "Basic Charts"].map((f) => (
+              {["Daily Horoscope", "Basic Charts", "10 AI Consultations/mo"].map((f) => (
                 <div key={f} className="text-sm font-medium flex gap-3 text-slate-700">
                   <CheckCircleIcon className="text-primary w-5 h-5 shrink-0" /> {f}
                 </div>
@@ -98,7 +98,7 @@ export default function Paywall({ onClose }: PaywallProps) {
               Select Silver
             </button>
             <div className="flex flex-col gap-3">
-              {["Detailed Dashas", "Transit Alerts", "Personalized Remedies"].map((f) => (
+              {["50 AI Consultations/mo", "Detailed Dashas", "Transit Alerts", "Personalized Remedies"].map((f) => (
                 <div key={f} className="text-sm font-medium flex gap-3 text-slate-700">
                   <CheckCircleIcon className="text-primary w-5 h-5 shrink-0" /> {f}
                 </div>
@@ -131,7 +131,7 @@ export default function Paywall({ onClose }: PaywallProps) {
               <div className="text-sm font-bold flex gap-3 text-slate-900">
                 <ShieldCheckIcon className="text-primary w-5 h-5 shrink-0" /> All Silver Features
               </div>
-              {["1-on-1 Consultation", "Gemstone Guidance"].map((f) => (
+              {["Unlimited Consultations", "1-on-1 Consultation", "Gemstone Guidance"].map((f) => (
                 <div key={f} className="text-sm font-medium flex gap-3 text-slate-700">
                   <CheckCircleIcon className="text-primary w-5 h-5 shrink-0" /> {f}
                 </div>

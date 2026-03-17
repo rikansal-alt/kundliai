@@ -40,15 +40,27 @@ function ConsultContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [consultLimitReached, setConsultLimitReached] = useState(false);
+  const [consultsUsed, setConsultsUsed] = useState(0);
+  const [consultLimit, setConsultLimit] = useState(10); // registered default
+  const [showCounter, setShowCounter] = useState(false);
   const isGuestRef = useRef<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Detect guest mode on mount
+  // Detect guest mode on mount + load consult count
   useEffect(() => {
     const guest = getGuestSession();
     isGuestRef.current = !!guest;
-    if (guest && hasReachedConsultLimit()) {
-      setConsultLimitReached(true);
+    if (guest) {
+      setConsultsUsed(guest.consultCount ?? 0);
+      setConsultLimit(FREE_CONSULT_LIMIT);
+      setShowCounter(true);
+      if (hasReachedConsultLimit()) {
+        setConsultLimitReached(true);
+      }
+    } else {
+      // Registered user — show counter (10/mo limit for free tier)
+      setConsultLimit(10);
+      setShowCounter(true);
     }
   }, []);
 
@@ -138,12 +150,12 @@ function ConsultContent() {
       const finalMessages = [...messages, userMsg, { ...aiMsg, text: aiText }];
       await saveConsultation(finalMessages);
 
-      // Track guest consult count and show prompt after limit
+      // Track consult count and show prompt after limit
+      setConsultsUsed((prev) => prev + 1);
       if (isGuestRef.current) {
         incrementConsultCount();
         if (hasReachedConsultLimit()) {
           setConsultLimitReached(true);
-          // Brief delay so user reads the AI response first
           setTimeout(() => setShowLoginPrompt(true), 1200);
         }
       }
@@ -193,6 +205,13 @@ function ConsultContent() {
           </div>
         </div>
       </header>
+
+      {/* Consultation counter */}
+      {showCounter && consultLimit < 999 && (
+        <div className="text-center py-1.5 shrink-0" style={{ fontSize: 11, color: "#B07840" }}>
+          {Math.max(0, consultLimit - consultsUsed)} of {consultLimit} consultations remaining
+        </div>
+      )}
 
       {/* Messages */}
       <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar" style={{ paddingBottom: "160px" }}>
