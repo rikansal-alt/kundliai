@@ -25,6 +25,9 @@
     "swisseph": "^0.5.17",
     "tz-lookup": "^6.1.25"
   },
+  "engines": {
+    "node": "18.x"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
