@@ -9,7 +9,7 @@ for (const key of FORBIDDEN_PUBLIC_KEYS) {
 }
 
 const nextConfig: NextConfig = {
-  // swisseph and tz-lookup are native/CJS modules — must not be bundled
+  // tz-lookup is a CJS module — must not be bundled
   serverExternalPackages: ["tz-lookup"],
 
   experimental: {

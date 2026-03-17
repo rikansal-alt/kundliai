@@ -19,12 +19,6 @@ const SUGGESTIONS = [
   { label: "🧘 Health Tips", icon: HeartbeatIcon },
 ];
 
-const CHART = {
-  lagna: "Sagittarius", sun: "Aries", moon: "Cancer", mars: "Scorpio",
-  mercury: "Aries", jupiter: "Pisces", venus: "Taurus", saturn: "Capricorn",
-  rahu: "Virgo", ketu: "Scorpio", mahadasha: "Venus",
-};
-
 function ConsultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,6 +26,17 @@ function ConsultContent() {
   const userId = searchParams.get("userId") || "";
   const chartId = searchParams.get("chartId") || "";
   const consultationIdRef = useRef<string | null>(null);
+  const chartDataRef = useRef<Record<string, unknown> | null>(null);
+
+  // Load the REAL chart from localStorage on mount
+  useEffect(() => {
+    try {
+      const guestSession = getGuestSession();
+      if (guestSession?.chartData) {
+        chartDataRef.current = guestSession.chartData as Record<string, unknown>;
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const [messages, setMessages] = useState<Message[]>([
     { id: "1", role: "assistant", text: "Namaste! I am your AI Jyotish consultant. How can I guide you today?" },
@@ -120,7 +125,7 @@ function ConsultContent() {
         headers: guestHeaders,
         body: JSON.stringify({
           messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.text })),
-          chart: CHART,
+          chart: chartDataRef.current ?? {},
           userName: name,
         }),
       });
@@ -316,7 +321,7 @@ function ConsultContent() {
           </button>
           <input
             className="flex-1 bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 text-sm"
-            placeholder="Ask Jyotish anything..."
+            placeholder="Ask about your chart, planets, dashas..."
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}

@@ -1,3 +1,5 @@
+// ─── Layer 1: Injection Detection ────────────────────────────────────────────
+
 const INJECTION_PATTERNS = [
   /ignore (previous|all|above) instructions/i,
   /you are now/i,
@@ -12,14 +14,59 @@ const INJECTION_PATTERNS = [
   /reveal your instructions/i,
 ];
 
-const OFF_TOPIC_PATTERNS = [
-  /\b(stock|invest|crypto|bitcoin|trade)\b/i,
-  /\b(medical|diagnos|prescri|symptom)\b/i,
-  /\b(legal advice|lawsuit|attorney)\b/i,
+// ─── Content Moderation (dangerous/PII) ─────────────────────────────────────
+
+const MODERATION_PATTERNS = [
   /\b(suicide|self.harm|kill (my|your)self)\b/i,
-  /\b(bomb|weapon|explosive|hack)\b/i,
+  /\b(bomb|weapon|explosive)\b/i,
   /\b(credit card|ssn|social security|password)\b/i,
 ];
+
+// ─── Layer 2: Topic Detection ────────────────────────────────────────────────
+
+const BLOCKED_TOPICS = [
+  /\bpython\b/i, /\bjavascript\b/i, /\b(code|coding)\b/i,
+  /\bprogram(ming)?\b/i, /\bscript\b/i, /\bfunction\b/i,
+  /\brecipe\b/i, /\bcook(ing)?\b/i, /\bingredient/i,
+  /\bnews\b/i, /\bpolitics\b/i, /\belection/i,
+  /\b(stock|invest|crypto|bitcoin|trade)\b/i,
+  /\bmovie\b/i, /\bsong\b/i, /\bmusic\b/i,
+  /\bgame\b/i, /\bsport/i, /\bfootball\b/i,
+  /\bmath\b/i, /\bequation/i,
+  /\btranslate\b/i,
+  /write (a|an|my) (essay|email|letter|report|blog)/i,
+  /summarize/i,
+  /explain .*(history|science|physics)/i,
+  /\b(medical|diagnos|prescri|symptom)\b/i,
+  /\b(legal advice|lawsuit|attorney)\b/i,
+];
+
+const ALLOWED_TOPICS = [
+  /astro/i, /planet/i, /chart/i, /kundli/i, /kundali/i,
+  /nakshatra/i, /dasha/i, /mahadasha/i, /antardasha/i, /bhukti/i,
+  /rashi/i, /lagna/i, /ascendant/i,
+  /moon/i, /sun/i, /mars/i, /venus/i,
+  /jupiter/i, /saturn/i, /mercury/i,
+  /rahu/i, /ketu/i, /transit/i,
+  /compatibility/i, /matching/i, /milan/i,
+  /muhurat/i, /panchang/i, /remed/i,
+  /gemstone/i, /mantra/i, /vedic/i,
+  /horoscope/i, /birth/i, /\bhouse\b/i,
+  /\bsign\b/i, /spiritual/i, /karma/i,
+  /dharma/i, /dosha/i, /\byoga\b/i,
+  /my chart/i, /my sign/i, /my life/i,
+  /career/i, /marriage/i, /love/i, /relationship/i,
+  /finance/i, /health/i, /future/i, /money/i, /job/i,
+  /prediction/i, /forecast/i,
+  /when will/i, /will i/i, /should i/i,
+  /what does/i, /why am/i, /how do i/i,
+  /tell me about/i, /explain/i,
+];
+
+const REDIRECT_MSG =
+  "I am here only to guide you through your Vedic birth chart. What would you like to know about your planetary positions or chart?";
+
+// ─── Exported Functions ──────────────────────────────────────────────────────
 
 export function sanitizeMessage(content: string): {
   safe: boolean;
@@ -36,9 +83,9 @@ export function sanitizeMessage(content: string): {
     }
   }
 
-  for (const pattern of OFF_TOPIC_PATTERNS) {
+  for (const pattern of MODERATION_PATTERNS) {
     if (pattern.test(content)) {
-      return { safe: false, reason: "off_topic" };
+      return { safe: false, reason: "moderation" };
     }
   }
 
@@ -50,7 +97,48 @@ export function sanitizeMessage(content: string): {
   return { safe: true, sanitized };
 }
 
+/**
+ * Layer 2: Check if a message is astrology-related BEFORE calling Claude.
+ * Returns false for obvious off-topic requests — saves API cost.
+ */
+export function isAstrologyRelated(message: string): boolean {
+  // Short messages are probably conversational context — allow
+  if (message.length < 15) return true;
+
+  // Check blocked topics first (explicit off-topic)
+  for (const pattern of BLOCKED_TOPICS) {
+    if (pattern.test(message)) return false;
+  }
+
+  // Check if any astrology keyword is present
+  for (const pattern of ALLOWED_TOPICS) {
+    if (pattern.test(message)) return true;
+  }
+
+  // Ambiguous — allow through, Claude's system prompt will redirect
+  return true;
+}
+
+/**
+ * Layer 3: Check if Claude accidentally answered an off-topic question.
+ */
+export function isOffTopicResponse(response: string): boolean {
+  const offTopicSignals = [
+    /here is (a |the )?python/i,
+    /here is (a |the )?code/i,
+    /def [a-z_]+\(/i,
+    /function [a-z_]+\(/i,
+    /import [a-z]/i,
+    /ingredients:/i,
+    /step 1:/i,
+    /```/, // code blocks
+  ];
+
+  return offTopicSignals.some((pattern) => pattern.test(response));
+}
+
 export function sanitizeResponse(response: string): string {
+  // Check for prompt leakage
   const LEAK_PATTERNS = [
     /system prompt/i,
     /my instructions are/i,
@@ -60,9 +148,16 @@ export function sanitizeResponse(response: string): string {
 
   for (const pattern of LEAK_PATTERNS) {
     if (pattern.test(response)) {
-      return "I can only help with Vedic astrology questions.";
+      return REDIRECT_MSG;
     }
+  }
+
+  // Check for off-topic response (Layer 3)
+  if (isOffTopicResponse(response)) {
+    return REDIRECT_MSG;
   }
 
   return response;
 }
+
+export { REDIRECT_MSG };
