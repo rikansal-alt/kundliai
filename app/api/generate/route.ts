@@ -1,76 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
 import { calcVimshottariMahadasha, serialiseMahadashaResult } from "@/lib/mahadasha";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { BirthDetailsSchema } from "@/lib/validators";
 import { safeLog } from "@/lib/logger";
+import { calculateChart } from "@/lib/ephemeris";
 
-// Native addon — must be server-only (Node.js runtime)
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const swe = require("swisseph-v2");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const tzlookup = require("tz-lookup");
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const SIGN_NAMES = [
-  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
-];
-
-const NAKSHATRAS = [
-  "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra",
-  "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
-  "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
-  "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishtha", "Shatabhisha",
-  "Purva Bhadrapada", "Uttara Bhadrapada", "Revati",
-];
-
-// Nakshatra lords (used locally for nakshatra metadata display)
-const NAKSHATRA_LORDS_LOCAL = [
-  "Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu",
-  "Jupiter", "Saturn", "Mercury", "Ketu", "Venus", "Sun",
-  "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury",
-  "Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu",
-  "Jupiter", "Saturn", "Mercury",
-];
-
-// Planet config: [swisseph id, display name]
-const PLANET_CONFIG: [number, string][] = [
-  [swe.SE_SUN,      "Sun"],
-  [swe.SE_MOON,     "Moon"],
-  [swe.SE_MARS,     "Mars"],
-  [swe.SE_MERCURY,  "Mercury"],
-  [swe.SE_JUPITER,  "Jupiter"],
-  [swe.SE_VENUS,    "Venus"],
-  [swe.SE_SATURN,   "Saturn"],
-  [swe.SE_MEAN_NODE, "Rahu"],  // Mean North Node
-];
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function normalizeDeg(deg: number): number {
-  return ((deg % 360) + 360) % 360;
-}
-
-function signIndex(lon: number): number {
-  return Math.floor(normalizeDeg(lon) / 30);
-}
-
-function degreeInSign(lon: number): number {
-  return normalizeDeg(lon) % 30;
-}
-
-function getNakshatra(lon: number) {
-  const normalized = normalizeDeg(lon);
-  const nakshatraIndex = Math.floor(normalized / (360 / 27));
-  const padaIndex = Math.floor((normalized % (360 / 27)) / (360 / 108));
-  return {
-    name: NAKSHATRAS[nakshatraIndex],
-    pada: padaIndex + 1,
-    lord: NAKSHATRA_LORDS_LOCAL[nakshatraIndex],
-  };
-}
 
 /**
  * Convert local birth date/time to UTC using Intl
@@ -79,15 +17,12 @@ function getNakshatra(lon: number) {
 function localToUTC(
   year: number, month: number, day: number,
   hour: number, min: number,
-  timezone: string
+  timezone: string,
 ): Date {
-  // Guard: clamp to valid ranges so NaN/out-of-range values never reach Date.UTC
   const h = (isNaN(hour) || hour > 23) ? 12 : Math.max(0, hour);
-  const m = (isNaN(min)  || min  > 59) ? 0  : Math.max(0, min);
-  // Naive UTC (wrong timezone, but gives us the offset reference)
+  const m = (isNaN(min) || min > 59) ? 0 : Math.max(0, min);
   const naive = new Date(Date.UTC(year, month - 1, day, h, m, 0));
 
-  // What local time does this naive UTC represent in the birth timezone?
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone,
     year: "numeric", month: "numeric", day: "numeric",
@@ -97,14 +32,11 @@ function localToUTC(
   const get = (type: string) =>
     parseInt(parts.find((p) => p.type === type)!.value);
 
-  const localMs  = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour") % 24, get("minute"), 0);
+  const localMs = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour") % 24, get("minute"), 0);
   const targetMs = Date.UTC(year, month - 1, day, h, m, 0);
-
-  // offset = what naive UTC shows as local  — difference from what we want
   const offsetMs = localMs - targetMs;
   return new Date(naive.getTime() - offsetMs);
 }
-
 
 // ─── Regional chart style ─────────────────────────────────────────────────────
 
@@ -119,13 +51,13 @@ const BENGALI_STATES = new Set([
 ]);
 
 function getRegionalChartStyle(
-  nameParts: string[]
+  nameParts: string[],
 ): "south-indian" | "north-indian" | "bengali" {
   for (const part of nameParts) {
     if (SOUTH_INDIAN_STATES.has(part)) return "south-indian";
-    if (BENGALI_STATES.has(part))      return "bengali";
+    if (BENGALI_STATES.has(part)) return "bengali";
   }
-  return "north-indian"; // Hindi belt default
+  return "north-indian";
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
@@ -158,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     const { name, date, time, city, lat: reqLat, lng: reqLng } = parsed.data;
 
-    // ── 1. Resolve lat/lng — use provided coords or geocode city ──────────
+    // ── 1. Resolve lat/lng ──────────────────────────────────────────────
     let lat: number, lng: number, locationName: string;
     let defaultChartStyle: "south-indian" | "north-indian" | "bengali" = "north-indian";
 
@@ -166,16 +98,14 @@ export async function POST(req: NextRequest) {
       lat = reqLat;
       lng = reqLng;
       locationName = city;
-      // Try to detect regional style from city string
       const nameParts = city.split(/[,\s]+/).map((s: string) => s.trim());
       defaultChartStyle = getRegionalChartStyle(nameParts);
     } else {
-      // ── 1a. Geocode city → lat/lng ───────────────────────────────────────
       let geoRes: Response;
       try {
         geoRes = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,
-          { headers: { "User-Agent": "Jyotish-App/1.0 (vedic astrology calculator)" }, signal: AbortSignal.timeout(8000) }
+          { headers: { "User-Agent": "Jyotish-App/1.0 (vedic astrology calculator)" }, signal: AbortSignal.timeout(8000) },
         );
       } catch {
         return NextResponse.json({ error: "Could not reach the location service. Please select a location from the dropdown suggestions." }, { status: 503 });
@@ -186,7 +116,6 @@ export async function POST(req: NextRequest) {
       }
 
       const geoData = await geoRes.json();
-
       if (!geoData.length) {
         return NextResponse.json({ error: `City "${city}" not found` }, { status: 404 });
       }
@@ -195,16 +124,14 @@ export async function POST(req: NextRequest) {
       lng = parseFloat(geoData[0].lon);
       locationName = geoData[0].display_name;
 
-      // ── 1b. Regional chart style default ────────────────────────────────
       const nameParts = locationName.split(",").map((s: string) => s.trim());
       defaultChartStyle = getRegionalChartStyle(nameParts);
     }
 
-    // ── 2. Timezone from coordinates ───────────────────────────────────────
+    // ── 2. Timezone from coordinates ────────────────────────────────────
     const timezone: string = tzlookup(lat, lng) ?? "UTC";
 
-    // ── 3. Parse date and time ─────────────────────────────────────────────
-    // Accept DD/MM/YYYY, YYYY-MM-DD, or MM/DD/YYYY
+    // ── 3. Parse date and time ──────────────────────────────────────────
     let year: number, month: number, day: number;
     const dateStr = String(date).trim();
 
@@ -216,111 +143,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Date must be DD/MM/YYYY or YYYY-MM-DD" }, { status: 400 });
     }
 
-    // Sanitise time: accept HH:MM, HH:MM:SS, or bare HH. Fall back to noon.
     const rawTime = String(time ?? "").trim();
     const TIME_RE = /^(\d{1,2})(?::(\d{1,2}))?/;
-    const tMatch  = TIME_RE.exec(rawTime);
+    const tMatch = TIME_RE.exec(rawTime);
     const parsedHour = tMatch ? parseInt(tMatch[1], 10) : NaN;
-    const parsedMin  = tMatch ? parseInt(tMatch[2] ?? "0", 10) : NaN;
-    const birthHour  = isNaN(parsedHour) || parsedHour > 23 ? 12 : parsedHour;
-    const birthMin   = isNaN(parsedMin)  || parsedMin  > 59 ? 0  : parsedMin;
-    const timeStr    = `${birthHour.toString().padStart(2,"0")}:${birthMin.toString().padStart(2,"0")}`;
-    const hasTime    = !!(tMatch && rawTime.length > 0);
+    const parsedMin = tMatch ? parseInt(tMatch[2] ?? "0", 10) : NaN;
+    const birthHour = isNaN(parsedHour) || parsedHour > 23 ? 12 : parsedHour;
+    const birthMin = isNaN(parsedMin) || parsedMin > 59 ? 0 : parsedMin;
+    const timeStr = `${birthHour.toString().padStart(2, "0")}:${birthMin.toString().padStart(2, "0")}`;
+    const hasTime = !!(tMatch && rawTime.length > 0);
 
-    // ── 4. Local birth time → UTC ──────────────────────────────────────────
+    // ── 4. Local birth time → UTC ───────────────────────────────────────
     const birthDate = new Date(Date.UTC(year, month - 1, day));
     const utcDate = localToUTC(year, month, day, birthHour, birthMin, timezone);
-    const utcHour = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60 + utcDate.getUTCSeconds() / 3600;
+    const utcHour = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60;
 
-    // ── 5. Julian Day (UT) ─────────────────────────────────────────────────
-    const jd: number = swe.swe_julday(
-      utcDate.getUTCFullYear(),
-      utcDate.getUTCMonth() + 1,
-      utcDate.getUTCDate(),
-      utcHour,
-      swe.SE_GREG_CAL
-    );
+    // ── 5. Calculate chart using pure JS ephemeris ───────────────────────
+    const c = calculateChart(utcDate, lat, lng);
 
-    // ── 6. Swiss Ephemeris setup ───────────────────────────────────────────
-    swe.swe_set_ephe_path(path.join(process.cwd(), "node_modules/swisseph-v2/ephe"));
-    swe.swe_set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
-
-    const FLAG = swe.SEFLG_SIDEREAL | swe.SEFLG_SPEED;
-
-    // ── 7. Ayanamsha ───────────────────────────────────────────────────────
-    const ayanamsha: number = swe.swe_get_ayanamsa_ut(jd);
-
-    // ── 8. Tropical ascendant → sidereal ──────────────────────────────────
-    // swe_houses returns tropical cusps; subtract ayanamsha for sidereal
-    const tropicalHouses = swe.swe_houses(jd, lat, lng, "W");
-    const lagnaLon = normalizeDeg(tropicalHouses.ascendant - ayanamsha);
-    const lagnaSignIdx = signIndex(lagnaLon);
-    const lagnaSign = SIGN_NAMES[lagnaSignIdx];
-
-    const mcLon = normalizeDeg(tropicalHouses.mc - ayanamsha);
-    const mcSign = SIGN_NAMES[signIndex(mcLon)];
-
-    // ── 9. Calculate all 9 planets (sidereal, Lahiri) ─────────────────────
-    const planets: Record<string, object> = {};
-    let moonLon = 0;
-
-    for (const [planetId, planetName] of PLANET_CONFIG) {
-      const result = swe.swe_calc_ut(jd, planetId, FLAG);
-
-      if (result.error) {
-        safeLog("error", `Error calculating ${planetName}:`, { error: String(result.error) });
-        continue;
-      }
-
-      const lon = normalizeDeg(result.longitude);
-      const signIdx = signIndex(lon);
-      const degSign = degreeInSign(lon);
-      const house = ((signIdx - lagnaSignIdx + 12) % 12) + 1;
-      const retrograde = result.longitudeSpeed < 0;
-      const nakshatra = getNakshatra(lon);
-
-      planets[planetName] = {
-        longitude: Math.round(lon * 1000) / 1000,
-        sign: SIGN_NAMES[signIdx],
-        signIndex: signIdx,
-        house,
-        degree: Math.round(degSign * 100) / 100,
-        retrograde,
-        nakshatra: nakshatra.name,
-        nakshatraPada: nakshatra.pada,
-        nakshatraLord: nakshatra.lord,
-      };
-
-      if (planetName === "Moon") moonLon = lon;
-    }
-
-    // ── 10. Ketu = Rahu + 180° ─────────────────────────────────────────────
-    const rahuData = planets["Rahu"] as { longitude: number; signIndex: number };
-    const ketuLon = normalizeDeg(rahuData.longitude + 180);
-    const ketuSignIdx = signIndex(ketuLon);
-    const ketuNakshatra = getNakshatra(ketuLon);
-    planets["Ketu"] = {
-      longitude: Math.round(ketuLon * 1000) / 1000,
-      sign: SIGN_NAMES[ketuSignIdx],
-      signIndex: ketuSignIdx,
-      house: ((ketuSignIdx - lagnaSignIdx + 12) % 12) + 1,
-      degree: Math.round(degreeInSign(ketuLon) * 100) / 100,
-      retrograde: true,  // Ketu is always considered retrograde
-      nakshatra: ketuNakshatra.name,
-      nakshatraPada: ketuNakshatra.pada,
-      nakshatraLord: ketuNakshatra.lord,
-    };
-
-    // ── 11. Vimshottari Mahadasha from Moon longitude ─────────────────────
+    // ── 6. Vimshottari Mahadasha from Moon longitude ────────────────────
+    const moonLon = (c.planets["Moon"] as { longitude: number }).longitude;
     const mahadasha = serialiseMahadashaResult(
-      calcVimshottariMahadasha(moonLon, birthDate)
+      calcVimshottariMahadasha(moonLon, birthDate),
     );
 
-    // ── 12. Moon sign (Rashi) and Sun sign ───────────────────────────────
-    const moonSignData = planets["Moon"] as { sign: string };
-    const sunSignData  = planets["Sun"]  as { sign: string };
-
-    // ── 13. Build chart JSON ──────────────────────────────────────────────
+    // ── 7. Build chart JSON ─────────────────────────────────────────────
     const chart = {
       meta: {
         name,
@@ -337,27 +184,18 @@ export async function POST(req: NextRequest) {
         calculatedAt: new Date().toISOString(),
         ayanamsha: {
           name: "Lahiri",
-          value: Math.round(ayanamsha * 10000) / 10000,
+          value: c.ayanamsha,
         },
         system: "Sidereal · Whole Sign Houses · Vimshottari Dasha",
-        julianDay: Math.round(jd * 100) / 100,
+        julianDay: c.julianDay,
         hasTime,
         defaultChartStyle,
       },
-      ascendant: {
-        sign: lagnaSign,
-        signIndex: lagnaSignIdx,
-        longitude: Math.round(lagnaLon * 1000) / 1000,
-        degree: Math.round(degreeInSign(lagnaLon) * 100) / 100,
-        nakshatra: getNakshatra(lagnaLon).name,
-      },
-      mc: {
-        sign: mcSign,
-        longitude: Math.round(mcLon * 1000) / 1000,
-      },
-      moonSign: moonSignData.sign,
-      sunSign: sunSignData.sign,
-      planets,
+      ascendant: c.ascendant,
+      mc: c.mc,
+      moonSign: c.moonSign,
+      sunSign: c.sunSign,
+      planets: c.planets,
       mahadasha,
     };
 

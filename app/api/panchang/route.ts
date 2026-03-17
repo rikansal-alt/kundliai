@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
 import { safeLog } from "@/lib/logger";
+import { getPanchangPositions } from "@/lib/ephemeris";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const swe = require("swisseph-v2");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const tzlookup = require("tz-lookup");
 
@@ -124,16 +122,9 @@ export async function GET(req: NextRequest) {
     const month = now.getUTCMonth() + 1;
     const day   = now.getUTCDate();
 
-    // Julian Day at 6 AM UTC (covers Indian morning)
-    swe.swe_set_ephe_path(path.join(process.cwd(), "node_modules/swisseph-v2/ephe"));
-    swe.swe_set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
-    const jd: number = swe.swe_julday(year, month, day, 6.0, swe.SE_GREG_CAL);
-    const FLAG = swe.SEFLG_SIDEREAL;
-
-    const sunRes  = swe.swe_calc_ut(jd, swe.SE_SUN,  FLAG);
-    const moonRes = swe.swe_calc_ut(jd, swe.SE_MOON, FLAG);
-    const sunLon  = normLon(sunRes.longitude ?? 0);
-    const moonLon = normLon(moonRes.longitude ?? 0);
+    // Sun & Moon sidereal longitudes at 6 AM UTC (covers Indian morning)
+    const panchangDate = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
+    const { sunLon, moonLon } = getPanchangPositions(panchangDate);
 
     // ── Tithi ─────────────────────────────────────────────────────────────
     const diff      = normLon(moonLon - sunLon);
