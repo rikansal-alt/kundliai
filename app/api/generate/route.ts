@@ -7,7 +7,7 @@ import { safeLog } from "@/lib/logger";
 
 // Native addon — must be server-only (Node.js runtime)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const swe = require("swisseph");
+const swe = require("swisseph-v2");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const tzlookup = require("tz-lookup");
 
@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
     );
 
     // ── 6. Swiss Ephemeris setup ───────────────────────────────────────────
-    swe.swe_set_ephe_path(path.join(process.cwd(), "node_modules/swisseph/ephe"));
+    swe.swe_set_ephe_path(path.join(process.cwd(), "node_modules/swisseph-v2/ephe"));
     swe.swe_set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
 
     const FLAG = swe.SEFLG_SIDEREAL | swe.SEFLG_SPEED;

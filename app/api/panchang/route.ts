@@ -3,7 +3,7 @@ import path from "path";
 import { safeLog } from "@/lib/logger";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const swe = require("swisseph");
+const swe = require("swisseph-v2");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const tzlookup = require("tz-lookup");
 
@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
     const day   = now.getUTCDate();
 
     // Julian Day at 6 AM UTC (covers Indian morning)
-    swe.swe_set_ephe_path(path.join(process.cwd(), "node_modules/swisseph/ephe"));
+    swe.swe_set_ephe_path(path.join(process.cwd(), "node_modules/swisseph-v2/ephe"));
     swe.swe_set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
     const jd: number = swe.swe_julday(year, month, day, 6.0, swe.SE_GREG_CAL);
     const FLAG = swe.SEFLG_SIDEREAL;
