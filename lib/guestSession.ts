@@ -54,12 +54,10 @@ export function saveGuestSession(data: Partial<GuestSession>): GuestSession {
   const now = Date.now();
   const existing = getGuestSession();
   const session: GuestSession = {
-    guestId:         existing?.guestId      ?? makeId(),
     chartData:       data.chartData         ?? existing?.chartData       ?? null,
     birthDetails:    data.birthDetails      ?? existing?.birthDetails    ?? null,
     consultMessages: data.consultMessages   ?? existing?.consultMessages ?? [],
     consultCount:    data.consultCount      ?? existing?.consultCount    ?? 0,
-    createdAt:       existing?.createdAt    ?? new Date(now).toISOString(),
     expiresAt:       new Date(now + TTL_MS).toISOString(),
     ...data,
     // Always keep guestId and createdAt from the existing session
