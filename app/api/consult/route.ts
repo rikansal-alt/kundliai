@@ -203,6 +203,14 @@ NEVER:
 
     let text = response.content[0].type === "text" ? response.content[0].text : "";
 
+    // Strip markdown formatting (italic, bold, headers)
+    text = text
+      .replace(/\*\*(.+?)\*\*/g, "$1")  // **bold**
+      .replace(/\*(.+?)\*/g, "$1")      // *italic*
+      .replace(/_(.+?)_/g, "$1")        // _italic_
+      .replace(/^#+\s*/gm, "")          // # headers
+      .replace(/^[-•]\s*/gm, "");       // bullet points
+
     // ── Sanitize response for prompt leakage ────────────────────────────
     text = sanitizeResponse(text);
 

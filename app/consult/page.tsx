@@ -176,7 +176,7 @@ function ConsultContent() {
 
   return (
     <div
-      className="relative flex flex-col bg-[#FFF8E8] overflow-hidden page-enter"
+      className="relative flex flex-col bg-white overflow-hidden page-enter"
       style={{ height: "100dvh" }}
     >
       {showLoginPrompt && (
@@ -284,7 +284,7 @@ function ConsultContent() {
 
       {/* Bottom Controls */}
       <div
-        className="fixed left-1/2 -translate-x-1/2 bg-gradient-to-t from-[#FFF8E8] via-[#FFF8E8]/95 to-transparent pt-8 px-4 space-y-4"
+        className="fixed left-1/2 -translate-x-1/2 bg-gradient-to-t from-white via-white/95 to-transparent pt-8 px-4 space-y-4"
         style={{
           bottom: 0,
           width: "min(430px, 100vw)",
@@ -342,7 +342,7 @@ function ConsultContent() {
 
 export default function ConsultPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#FFF8E8]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
       <ConsultContent />
     </Suspense>
   );

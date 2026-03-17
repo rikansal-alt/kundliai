@@ -112,7 +112,7 @@ function HomeContent() {
   return (
     <div
       className="flex-1 flex flex-col bg-white min-h-screen page-enter"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 120px)" }}
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 80px)" }}
     >
       {showSavePrompt && (
         <SoftLoginPrompt trigger="save_chart" onDismiss={() => setShowSavePrompt(false)} />

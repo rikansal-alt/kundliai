@@ -378,7 +378,7 @@ export default function DailyGuidancePage() {
   return (
     <div
       className="flex-1 flex flex-col bg-white min-h-screen page-enter"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 120px)" }}
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 80px)" }}
     >
       {/* ── Header ── */}
       <header
