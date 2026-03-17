@@ -5,8 +5,8 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 
 const EFFECTIVE_DATE = "March 16, 2026";
 const CONTACT_EMAIL  = "support@kundliai.app";
-const APP_NAME       = "KundaliAI";
-const COMPANY        = "KundaliAI, Inc.";
+const APP_NAME       = "KundliAI";
+const COMPANY        = "KundliAI, Inc.";
 
 export default function TermsPage() {
   const router = useRouter();

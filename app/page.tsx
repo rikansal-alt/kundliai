@@ -90,7 +90,7 @@ export default function LandingPage() {
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&limit=5&addressdetails=1`,
-          { headers: { "User-Agent": "KundaliAI-App/1.0 (vedic astrology calculator)" } }
+          { headers: { "User-Agent": "KundliAI-App/1.0 (vedic astrology calculator)" } }
         );
         const data: PlaceSuggestion[] = await res.json();
         setSuggestions(data);
@@ -122,7 +122,7 @@ export default function LandingPage() {
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-            { headers: { "User-Agent": "KundaliAI-App/1.0 (vedic astrology calculator)" } }
+            { headers: { "User-Agent": "KundliAI-App/1.0 (vedic astrology calculator)" } }
           );
           const data = await res.json();
           const addr = data?.address;
@@ -294,7 +294,7 @@ export default function LandingPage() {
 
       {/* Header */}
       <header className="text-center mb-10">
-        <h1 className="fraunces-italic text-5xl text-primary font-bold mb-2">KundaliAI</h1>
+        <h1 className="fraunces-italic text-5xl text-primary font-bold mb-2">KundliAI</h1>
         <p className="text-xs tracking-[0.2em] font-medium text-slate-500 uppercase">Vedic Astrology · AI · Ancient Wisdom</p>
       </header>
 

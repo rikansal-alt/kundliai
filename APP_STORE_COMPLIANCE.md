@@ -1,11 +1,11 @@
-# App Store Compliance — KundaliAI
+# App Store Compliance — KundliAI
 
 ## Apple App Store
 
 ### Metadata
 | Field | Value |
 |-------|-------|
-| **App Name** | KundaliAI — Vedic Astrology AI |
+| **App Name** | KundliAI — Vedic Astrology AI |
 | **Subtitle** | Birth Chart, Panchang & Kundli |
 | **Category (Primary)** | Lifestyle |
 | **Category (Secondary)** | Entertainment |
@@ -63,7 +63,7 @@ We do not track users across apps or websites owned by other companies and do no
 | `com.kundliai.silver.monthly` | Auto-Renewable Subscription | ₹299/mo | Silver — Detailed Dashas, Transit Alerts, Compatibility |
 | `com.kundliai.gold.monthly` | Auto-Renewable Subscription | ₹799/mo | Gold — All Silver + AI Consultation, Gemstone Guidance |
 
-**Subscription Group Name:** KundaliAI Premium
+**Subscription Group Name:** KundliAI Premium
 **Free Trial:** 7 days (Gold plan)
 
 ### Required Review Notes for Apple

@@ -168,7 +168,7 @@ export default function CompatibilityPage() {
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&limit=5`,
-          { headers: { "User-Agent": "KundaliAI-App/1.0 (vedic astrology calculator)" } }
+          { headers: { "User-Agent": "KundliAI-App/1.0 (vedic astrology calculator)" } }
         );
         setCitySuggestions(await res.json());
       } catch { setCitySuggestions([]); }
@@ -433,7 +433,7 @@ export default function CompatibilityPage() {
         if (navigator.share && navigator.canShare({ files: [file] })) {
           await navigator.share({
             title: `${userData?.name ?? "My"} × ${partner.name} — ${gunMilan.totalScore}/36`,
-            text: `Gun Milan score: ${gunMilan.totalScore}/36 — ${gunMilan.rating}. Calculated with KundaliAI.`,
+            text: `Gun Milan score: ${gunMilan.totalScore}/36 — ${gunMilan.rating}. Calculated with KundliAI.`,
             files: [file],
           });
         } else {
@@ -1138,7 +1138,7 @@ export default function CompatibilityPage() {
       >
         {/* Logo */}
         <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.15em", color: "#d6880a", marginBottom: 4, textTransform: "uppercase" }}>
-          KundaliAI
+          KundliAI
         </div>
         <div style={{ fontSize: 11, color: "#a07840", marginBottom: 24, letterSpacing: "0.1em" }}>
           Vedic Compatibility · Gun Milan
@@ -1189,7 +1189,7 @@ export default function CompatibilityPage() {
 
         {/* Footer */}
         <div style={{ fontSize: 10, color: "#a07840", letterSpacing: "0.08em" }}>
-          Calculated with KundaliAI · kundliai.app
+          Calculated with KundliAI · kundliai.app
         </div>
       </div>
 

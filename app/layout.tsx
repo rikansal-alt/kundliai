@@ -32,13 +32,13 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "KundaliAI — Vedic Astrology & AI",
+  title: "KundliAI — Vedic Astrology & AI",
   description: "AI-powered Vedic birth charts, Kundali reading and Jyotish consultation",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "KundaliAI",
+    title: "KundliAI",
   },
   icons: {
     apple: [
