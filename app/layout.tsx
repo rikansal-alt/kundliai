@@ -4,6 +4,7 @@ import "./globals.css";
 import AppNav from "@/components/AppNav";
 import { NavProvider } from "@/context/NavContext";
 import AuthProvider from "@/components/AuthProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 const lexend = Lexend({
   subsets: ["latin"],
@@ -82,6 +83,7 @@ export default function RootLayout({
             <AppNav />
           </NavProvider>
         </AuthProvider>
+          <Analytics />
           <script
             dangerouslySetInnerHTML={{
               __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});})}`,
