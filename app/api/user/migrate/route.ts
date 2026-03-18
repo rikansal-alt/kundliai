@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const googleId = sanitizeString(body.googleId, 100);
     const guestId = body.guestId ? sanitizeString(body.guestId, 100) : undefined;
+    const guestUserId = body.guestUserId ? sanitizeString(body.guestUserId, 200) : undefined;
     const { birthDetails, chartData, consultMessages } = body;
 
     if (!googleId || !birthDetails || !chartData) {
@@ -47,9 +48,12 @@ export async function POST(req: NextRequest) {
       { upsert: true, new: true }
     );
 
-    // If there was a guest chart stored under guestId, clean it up
+    // Clean up old guest charts (stored under UUID guestId or name_dob format)
     if (guestChart) {
       await Chart.deleteOne({ _id: guestChart._id });
+    }
+    if (guestUserId) {
+      await Chart.deleteMany({ userId: guestUserId });
     }
 
     return NextResponse.json({

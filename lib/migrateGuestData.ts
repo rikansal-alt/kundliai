@@ -36,6 +36,10 @@ export async function migrateGuestData(googleId: string): Promise<MigrationResul
         birthDetails: session.birthDetails,
         chartData:    session.chartData,
         consultMessages: session.consultMessages ?? [],
+        // Pass the name_dob userId so the endpoint can clean up the guest chart
+        guestUserId: session.birthDetails
+          ? `${session.birthDetails.name.toLowerCase().replace(/\s+/g, "_")}_${session.birthDetails.date.replace(/\//g, "-")}`
+          : undefined,
       }),
     });
 
