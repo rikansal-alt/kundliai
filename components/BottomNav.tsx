@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { HouseIcon, MoonStarsIcon, RobotIcon, PlanetIcon } from "@phosphor-icons/react";
+import { HouseIcon, MoonStarsIcon, RobotIcon, PlanetIcon, GearIcon } from "@phosphor-icons/react";
 
 const navItems = [
-  { href: "/home",     icon: HouseIcon,     label: "Home"    },
+  { href: "/home",     icon: HouseIcon,     label: "Home"     },
   { href: "/panchang", icon: MoonStarsIcon, label: "Panchang" },
-  { href: "/consult",  icon: RobotIcon,     label: "Consult" },
-  { href: "/kundli",   icon: PlanetIcon,    label: "Kundli"  },
+  { href: "/consult",  icon: RobotIcon,     label: "Consult"  },
+  { href: "/kundli",   icon: PlanetIcon,    label: "Kundli"   },
+  { href: "/settings", icon: GearIcon,      label: "Settings" },
 ];
 
 export default function BottomNav() {

@@ -70,7 +70,7 @@ function ConsultContent() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [consultLimitReached, setConsultLimitReached] = useState(false);
   const [consultsUsed, setConsultsUsed] = useState(0);
-  const [consultLimit, setConsultLimit] = useState(10); // registered default
+  const [consultLimit, setConsultLimit] = useState(15); // registered default
   const [showCounter, setShowCounter] = useState(false);
   const isGuestRef = useRef<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -87,8 +87,8 @@ function ConsultContent() {
         setConsultLimitReached(true);
       }
     } else {
-      // Registered user — show counter (10/mo limit for free tier)
-      setConsultLimit(10);
+      // Registered user — show counter (15/mo limit for free tier)
+      setConsultLimit(15);
       setShowCounter(true);
     }
   }, []);
