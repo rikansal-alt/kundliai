@@ -130,7 +130,17 @@ function ConsultContent() {
         }),
       });
 
-      if (!res.ok) throw new Error("API error");
+      if (!res.ok) {
+        if (res.status === 429) {
+          setConsultsUsed(consultLimit);
+          setConsultLimitReached(true);
+          if (isGuestRef.current) {
+            setTimeout(() => setShowLoginPrompt(true), 500);
+          }
+          throw new Error("limit_reached");
+        }
+        throw new Error("API error");
+      }
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let aiText = "";
@@ -164,11 +174,16 @@ function ConsultContent() {
           setTimeout(() => setShowLoginPrompt(true), 1200);
         }
       }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { id: "err", role: "assistant", text: "Add your ANTHROPIC_API_KEY to .env.local to enable AI responses." },
-      ]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg === "limit_reached") {
+        // Don't add an error message — the banner handles it
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { id: "err", role: "assistant", text: "Something went wrong. Please try again." },
+        ]);
+      }
     } finally {
       setIsLoading(false);
     }
