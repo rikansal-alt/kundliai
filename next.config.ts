@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
             "img-src 'self' data: blob: https://lh3.googleusercontent.com",
-            "connect-src 'self' https://api.anthropic.com https://accounts.google.com https://nominatim.openstreetmap.org",
+            "connect-src 'self' https://api.anthropic.com https://accounts.google.com https://nominatim.openstreetmap.org https://va.vercel-scripts.com https://vitals.vercel-insights.com",
             "frame-ancestors 'none'",
           ].join("; "),
         },

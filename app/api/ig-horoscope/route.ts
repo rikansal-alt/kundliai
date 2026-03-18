@@ -49,11 +49,12 @@ Generate a daily horoscope for EACH of the 12 Moon Signs (Rashis). For each sign
 1. A 2-3 sentence horoscope prediction (max 50 words) based on how today's transits affect that sign
 2. A "focus" keyword (1-2 words like "Career Growth", "Self Care", "Relationships", "Finances", "Health", "Creativity", "Communication", "Adventure", "Discipline", "Intuition", "New Beginnings", "Inner Peace")
 3. A rating from 1-5 stars
+4. An Instagram caption (2-3 lines max, casual & engaging tone, include 1-2 relevant emojis, end with a question to boost engagement). Do NOT include hashtags in the caption.
 
 Consider actual transit aspects: which houses the transiting planets activate for each ascendant/moon sign, any conjunctions, aspects (7th, 5th, 9th), and retrograde effects.
 
 Return ONLY a valid JSON array with exactly 12 objects in this format (Aries first, Pisces last):
-[{"sign":"Aries","symbol":"${SIGN_SYMBOLS.Aries}","prediction":"...","focus":"...","stars":4}, ...]
+[{"sign":"Aries","symbol":"${SIGN_SYMBOLS.Aries}","prediction":"...","focus":"...","stars":4,"caption":"..."}, ...]
 
 No markdown, no explanation — just the JSON array.`;
 
@@ -84,6 +85,7 @@ No markdown, no explanation — just the JSON array.`;
         prediction: found?.prediction || "The stars align for a day of reflection and inner growth.",
         focus: found?.focus || "Balance",
         stars: Math.min(5, Math.max(1, found?.stars || 3)),
+        caption: found?.caption || "",
         index: i,
       };
     });

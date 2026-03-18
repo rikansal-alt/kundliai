@@ -185,54 +185,48 @@ NEVER:
 - Give medical, legal, or investment advice
 - Give a response without referencing their specific chart`;
 
-    // Collect full response first so we can check word count
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 400,
-      system: systemPrompt,
-      messages: validatedMessages.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      })),
-    });
-
-    let text = response.content[0].type === "text" ? response.content[0].text : "";
-
-    // Strip markdown formatting (italic, bold, headers)
-    text = text
-      .replace(/\*\*(.+?)\*\*/g, "$1")  // **bold**
-      .replace(/\*(.+?)\*/g, "$1")      // *italic*
-      .replace(/_(.+?)_/g, "$1")        // _italic_
-      .replace(/^#+\s*/gm, "")          // # headers
-      .replace(/^[-•]\s*/gm, "");       // bullet points
-
-    // ── Sanitize response for prompt leakage ────────────────────────────
-    text = sanitizeResponse(text);
-
-    // Safety net: if over 150 words, summarise with a second call
-    const wordCount = text.trim().split(/\s+/).length;
-    if (wordCount > 150) {
-      const trim = await anthropic.messages.create({
-        model: "claude-sonnet-4-6",
-        max_tokens: 250,
-        messages: [{
-          role: "user",
-          content: `Condense to under 100 words. Keep the same warm tone. Keep ALL specific chart references (planet names, signs, houses, degrees). Keep the follow-up question. Remove filler:\n\n${text}`,
-        }],
-      });
-      text = trim.content[0].type === "text" ? trim.content[0].text : text;
-    }
-
-    // Stream the final text word-by-word for a natural feel
+    // Use actual streaming from Claude to avoid Vercel function timeouts
     const encoder = new TextEncoder();
-    const words = text.split(" ");
+    let fullText = "";
+
     const readable = new ReadableStream({
       async start(controller) {
-        for (const word of words) {
-          controller.enqueue(encoder.encode(word + " "));
-          await new Promise((r) => setTimeout(r, 18));
+        try {
+          const stream = anthropic.messages.stream({
+            model: "claude-sonnet-4-6",
+            max_tokens: 400,
+            system: systemPrompt,
+            messages: validatedMessages.map((m) => ({
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            })),
+          });
+
+          for await (const event of stream) {
+            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+              let chunk = event.delta.text;
+              // Strip markdown inline
+              chunk = chunk
+                .replace(/\*\*/g, "")
+                .replace(/(?<!\w)\*|\*(?!\w)/g, "")
+                .replace(/(?<!\w)_|_(?!\w)/g, "");
+              fullText += chunk;
+              controller.enqueue(encoder.encode(chunk));
+            }
+          }
+
+          // Sanitize final text for prompt leakage
+          const sanitized = sanitizeResponse(fullText);
+          if (sanitized !== fullText) {
+            // Response was flagged — replace everything
+            controller.enqueue(encoder.encode("\n\n" + sanitized));
+          }
+
+          controller.close();
+        } catch (err) {
+          safeLog("error", "Stream error:", { error: String(err) });
+          controller.error(err);
         }
-        controller.close();
       },
     });
 

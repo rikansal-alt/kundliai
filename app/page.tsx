@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
-import { SunIcon, CalendarBlankIcon, ClockIcon, MapPinIcon, ArrowRightIcon, LockIcon, SparkleIcon, StarIcon, ClockCounterClockwiseIcon, CrosshairIcon, CircleNotchIcon } from "@phosphor-icons/react";
+import { SunIcon, CalendarBlankIcon, ClockIcon, MapPinIcon, ArrowRightIcon, LockIcon, SparkleIcon, StarIcon, ClockCounterClockwiseIcon, CrosshairIcon, CircleNotchIcon, InstagramLogoIcon } from "@phosphor-icons/react";
 import { saveGuestSession, getGuestSession } from "@/lib/guestSession";
 
 interface PlaceSuggestion {
@@ -479,6 +479,15 @@ export default function LandingPage() {
           <span className="text-slate-300 text-[10px]">·</span>
           <a href="/terms" className="text-[10px] text-slate-400 underline underline-offset-2">Terms of Service</a>
         </div>
+        <a
+          href="https://www.instagram.com/kundliai/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-primary transition-colors"
+        >
+          <InstagramLogoIcon size={14} weight="thin" />
+          @kundliai
+        </a>
         <p className="text-[9px] text-slate-300 text-center">
           For entertainment purposes only. Not a substitute for professional advice.
         </p>

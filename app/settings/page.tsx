@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ArrowLeftIcon, SignOutIcon, TrashIcon, LockKeyIcon, EnvelopeIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, SignOutIcon, TrashIcon, LockKeyIcon, EnvelopeIcon, InstagramLogoIcon } from "@phosphor-icons/react";
 import { clearGuestSession } from "@/lib/guestSession";
 
 export default function SettingsPage() {
@@ -115,6 +115,22 @@ export default function SettingsPage() {
                 <p className="text-slate-400 text-[11px]">Permanently remove your data — 45 day processing time</p>
               </div>
             </button>
+          </div>
+        </section>
+
+        {/* Follow Us */}
+        <section>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-1">Follow Us</p>
+          <div className="bg-slate-50 rounded-2xl overflow-hidden">
+            <a
+              href="https://www.instagram.com/kundliai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-slate-100 transition-colors"
+            >
+              <InstagramLogoIcon className="w-4 h-4 text-slate-500" weight="thin" />
+              <span className="text-slate-700 text-sm font-medium">@kundliai on Instagram</span>
+            </a>
           </div>
         </section>
 
