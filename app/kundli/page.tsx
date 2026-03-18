@@ -2,40 +2,127 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeftIcon, ShareNetworkIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, ShareNetworkIcon, SparkleIcon } from "@phosphor-icons/react";
 import ChartRenderer, { ChartStyle, ChartPlanet, SignAbbr } from "@/components/charts/ChartRenderer";
-import { ZODIAC, SIGN_FULL, houseOf } from "@/components/charts/types";
+import { SIGN_FULL, houseOf } from "@/components/charts/types";
 
-// ─── Sample chart data ────────────────────────────────────────────────────────
-// Scorpio lagna · Reecha · 15/08/1990 New Delhi
+// ─── Planet display config ─────────────────────────────────────────────────
 
-const LAGNA_SIGN: SignAbbr = "Sc";
+const PLANET_CONFIG: Record<string, { abbr: string; color: string; bg: string; symbol: string }> = {
+  Sun:     { abbr: "Su", color: "#C47800", bg: "#FEF3C7", symbol: "☉" },
+  Moon:    { abbr: "Mo", color: "#1D4ED8", bg: "#EFF6FF", symbol: "☽" },
+  Mars:    { abbr: "Ma", color: "#DC2626", bg: "#FEF2F2", symbol: "♂" },
+  Mercury: { abbr: "Me", color: "#16A34A", bg: "#F0FDF4", symbol: "☿" },
+  Jupiter: { abbr: "Ju", color: "#D97706", bg: "#FFFBEB", symbol: "♃" },
+  Venus:   { abbr: "Ve", color: "#BE185D", bg: "#FDF2F8", symbol: "♀" },
+  Saturn:  { abbr: "Sa", color: "#475569", bg: "#F1F5F9", symbol: "♄" },
+  Rahu:    { abbr: "Ra", color: "#7C3AED", bg: "#F5F3FF", symbol: "☊" },
+  Ketu:    { abbr: "Ke", color: "#92400E", bg: "#FFF7ED", symbol: "☋" },
+};
 
-const PLANETS: ChartPlanet[] = [
-  { name: "Sun",     abbr: "Su", sign: "Ca", house: 9,  degree: 28.56, nakshatra: "Ashlesha",       color: "#C47800", bg: "#FEF3C7", symbol: "☉", retrograde: false },
-  { name: "Moon",    abbr: "Mo", sign: "Ta", house: 7,  degree: 21.31, nakshatra: "Rohini",          color: "#1D4ED8", bg: "#EFF6FF", symbol: "☽", retrograde: false },
-  { name: "Mars",    abbr: "Ma", sign: "Ar", house: 6,  degree: 27.58, nakshatra: "Krittika",        color: "#DC2626", bg: "#FEF2F2", symbol: "♂", retrograde: false },
-  { name: "Mercury", abbr: "Me", sign: "Le", house: 10, degree: 25.57, nakshatra: "Purva Phalguni",  color: "#16A34A", bg: "#F0FDF4", symbol: "☿", retrograde: false },
-  { name: "Jupiter", abbr: "Ju", sign: "Ge", house: 8,  degree: 2.45,  nakshatra: "Mrigashira",      color: "#D97706", bg: "#FFFBEB", symbol: "♃", retrograde: false },
-  { name: "Venus",   abbr: "Ve", sign: "Ca", house: 9,  degree: 5.78,  nakshatra: "Pushya",          color: "#BE185D", bg: "#FDF2F8", symbol: "♀", retrograde: false },
-  { name: "Saturn",  abbr: "Sa", sign: "Cp", house: 3,  degree: 19.22, nakshatra: "Shravana",        color: "#475569", bg: "#F1F5F9", symbol: "♄", retrograde: false },
-  { name: "Rahu",    abbr: "Ra", sign: "Aq", house: 4,  degree: 11.33, nakshatra: "Shatabhisha",     color: "#7C3AED", bg: "#F5F3FF", symbol: "☊", retrograde: true  },
-  { name: "Ketu",    abbr: "Ke", sign: "Le", house: 10, degree: 11.33, nakshatra: "Uttara Phalguni", color: "#92400E", bg: "#FFF7ED", symbol: "☋", retrograde: true  },
-];
+const SIGN_TO_ABBR: Record<string, SignAbbr> = {
+  Aries: "Ar", Taurus: "Ta", Gemini: "Ge", Cancer: "Ca", Leo: "Le", Virgo: "Vi",
+  Libra: "Li", Scorpio: "Sc", Sagittarius: "Sg", Capricorn: "Cp", Aquarius: "Aq", Pisces: "Pi",
+};
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Plain English planet descriptions ──────────────────────────────────────
+
+const PLANET_MEANING: Record<string, string> = {
+  Sun: "Your core identity, ego, and life purpose. Where the Sun sits shows what drives you at the deepest level.",
+  Moon: "Your emotional nature and inner world. The Moon reveals how you feel, what gives you comfort, and your instinctive reactions.",
+  Mars: "Your energy, courage, and drive. Mars shows how you take action, fight for what you want, and express anger.",
+  Mercury: "Your mind and communication style. Mercury reveals how you think, speak, learn, and process information.",
+  Jupiter: "Your wisdom, growth, and good fortune. Jupiter shows where life expands for you and what brings meaning.",
+  Venus: "Your love language, beauty, and values. Venus reveals what you're attracted to and how you express affection.",
+  Saturn: "Your discipline, challenges, and life lessons. Saturn shows where you must work hardest — and where the greatest rewards come.",
+  Rahu: "Your desires and ambitions in this lifetime. Rahu shows what you're magnetically drawn toward — your growth edge.",
+  Ketu: "Your past-life gifts and spiritual wisdom. Ketu shows what comes naturally but what you may need to let go of.",
+};
+
+const HOUSE_MEANING: Record<number, string> = {
+  1: "Self & Identity — how you present yourself to the world",
+  2: "Wealth & Family — your finances, speech, and family bonds",
+  3: "Courage & Communication — siblings, short travels, and skills",
+  4: "Home & Happiness — your emotional foundation and mother",
+  5: "Creativity & Children — romance, intelligence, and past-life merit",
+  6: "Health & Service — daily work, enemies, and overcoming obstacles",
+  7: "Partnerships & Marriage — committed relationships and business partners",
+  8: "Transformation & Hidden Matters — deep change, inheritance, and secrets",
+  9: "Luck & Higher Learning — father, spirituality, and long journeys",
+  10: "Career & Reputation — your public image and life achievements",
+  11: "Gains & Friends — income, social networks, and fulfilled desires",
+  12: "Spirituality & Losses — solitude, foreign lands, and liberation",
+};
+
+const SIGN_QUALITY: Record<string, string> = {
+  Ar: "with fiery initiative and boldness",
+  Ta: "with steady persistence and sensuality",
+  Ge: "with curious adaptability and wit",
+  Ca: "with nurturing depth and emotional intelligence",
+  Le: "with confident authority and creative flair",
+  Vi: "with analytical precision and service-mindedness",
+  Li: "with diplomatic grace and a love of harmony",
+  Sc: "with intense passion and transformative power",
+  Sg: "with optimistic vision and philosophical wisdom",
+  Cp: "with disciplined ambition and practical mastery",
+  Aq: "with innovative thinking and humanitarian ideals",
+  Pi: "with intuitive compassion and spiritual sensitivity",
+};
+
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 type TabKey = "Ascendant" | "Moon" | "Sun" | "Dasha";
 
-const MOON_SIGN = PLANETS.find(p => p.name === "Moon")!.sign;
-const SUN_SIGN  = PLANETS.find(p => p.name === "Sun")!.sign;
+interface StoredDasha {
+  planet: string;
+  startDate: string;
+  endDate: string;
+}
 
-const LAGNA_FOR_TAB: Record<TabKey, SignAbbr> = {
-  Ascendant: LAGNA_SIGN,
-  Moon:      MOON_SIGN,
-  Sun:       SUN_SIGN,
-  Dasha:     LAGNA_SIGN,
-};
+interface StoredMahadasha {
+  allDashas:        StoredDasha[];
+  currentBhuktis:   StoredDasha[];
+  currentMahadasha: StoredDasha;
+  currentBhukti:    StoredDasha;
+  percentElapsed:   number;
+}
+
+interface StoredPlanet {
+  sign: string;
+  house: number;
+  degree: number;
+  retrograde: boolean;
+  nakshatra: string;
+  nakshatraLord?: string;
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function convertPlanets(
+  storedPlanets: Record<string, StoredPlanet>,
+  lagnaAbbr: SignAbbr,
+): ChartPlanet[] {
+  return Object.entries(storedPlanets)
+    .filter(([name]) => PLANET_CONFIG[name])
+    .map(([name, p]) => {
+      const config = PLANET_CONFIG[name];
+      const signAbbr = SIGN_TO_ABBR[p.sign] || "Ar";
+      return {
+        name,
+        abbr: config.abbr,
+        sign: signAbbr as SignAbbr,
+        house: houseOf(signAbbr as SignAbbr, lagnaAbbr),
+        degree: p.degree,
+        nakshatra: p.nakshatra,
+        color: config.color,
+        bg: config.bg,
+        symbol: config.symbol,
+        retrograde: p.retrograde,
+      };
+    });
+}
+
+// ─── Constants ──────────────────────────────────────────────────────────────
 
 const TAB_LABEL: Record<TabKey, string> = {
   Ascendant: "Lagna Chart",
@@ -52,7 +139,7 @@ const STYLE_LABELS: { key: ChartStyle; label: string }[] = [
 
 const LS_KEY = "jyotish_chart_style";
 
-// ─── Planet symbol badge ──────────────────────────────────────────────────────
+// ─── Planet symbol badge ────────────────────────────────────────────────────
 
 function PlanetSymbol({ planet, size = 20 }: { planet: ChartPlanet; size?: number }) {
   return (
@@ -71,39 +158,51 @@ function PlanetSymbol({ planet, size = 20 }: { planet: ChartPlanet; size?: numbe
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
-
-interface StoredDasha {
-  planet: string;
-  startDate: string;
-  endDate: string;
-}
-
-interface StoredMahadasha {
-  allDashas:         StoredDasha[];
-  currentBhuktis:    StoredDasha[];
-  currentMahadasha:  StoredDasha;
-  currentBhukti:     StoredDasha;
-  percentElapsed:    number;
-}
+// ─── Main page ──────────────────────────────────────────────────────────────
 
 export default function KundliPage() {
   const router = useRouter();
   const [activeTab,    setActiveTab]    = useState<TabKey>("Ascendant");
   const [chartStyle,   setChartStyle]   = useState<ChartStyle>("south-indian");
   const [dashaData,    setDashaData]    = useState<StoredMahadasha | null>(null);
+  const [selectedPlanet, setSelectedPlanet] = useState<ChartPlanet | null>(null);
+  const [lagnaSign,    setLagnaSign]    = useState<SignAbbr>("Ar");
+  const [planets,      setPlanets]      = useState<ChartPlanet[]>([]);
+  const [chartLoaded,  setChartLoaded]  = useState(false);
+  const [ascNakshatra, setAscNakshatra] = useState("");
 
+  // Load chart data from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem("kundliai_chart");
-      if (raw) {
-        const snap = JSON.parse(raw);
-        if (snap?.mahadasha) setDashaData(snap.mahadasha as StoredMahadasha);
+      if (!raw) { setChartLoaded(true); return; }
+      const snap = JSON.parse(raw);
+
+      // Ascendant
+      const ascSign = typeof snap.ascendant === "object"
+        ? snap.ascendant.sign
+        : snap.ascendant;
+      const ascAbbr = SIGN_TO_ABBR[ascSign] || "Ar";
+      setLagnaSign(ascAbbr as SignAbbr);
+
+      if (typeof snap.ascendant === "object" && snap.ascendant.nakshatra) {
+        setAscNakshatra(snap.ascendant.nakshatra);
+      }
+
+      // Planets
+      if (snap.planets) {
+        setPlanets(convertPlanets(snap.planets, ascAbbr as SignAbbr));
+      }
+
+      // Mahadasha
+      if (snap.mahadasha) {
+        setDashaData(snap.mahadasha as StoredMahadasha);
       }
     } catch { /* ignore */ }
+    setChartLoaded(true);
   }, []);
 
-  // Hydrate style preference from localStorage on mount
+  // Hydrate style preference
   useEffect(() => {
     const stored = localStorage.getItem(LS_KEY) as ChartStyle | null;
     if (stored && ["south-indian", "north-indian", "bengali"].includes(stored)) {
@@ -114,20 +213,32 @@ export default function KundliPage() {
   function switchStyle(s: ChartStyle) {
     setChartStyle(s);
     localStorage.setItem(LS_KEY, s);
-    // Persist to server (fire-and-forget, no userId wired yet)
     fetch("/api/user/preference", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chartStyle: s }),
-    }).catch(() => {/* silent */});
+    }).catch(() => {});
   }
 
-  const lagnaSign = LAGNA_FOR_TAB[activeTab];
+  // Derive moon/sun signs from planets
+  const moonPlanet = planets.find(p => p.name === "Moon");
+  const sunPlanet = planets.find(p => p.name === "Sun");
+  const moonSign = moonPlanet?.sign || "Ar";
+  const sunSign = sunPlanet?.sign || "Ar";
+
+  const lagnaForTab: Record<TabKey, SignAbbr> = {
+    Ascendant: lagnaSign,
+    Moon: moonSign,
+    Sun: sunSign,
+    Dasha: lagnaSign,
+  };
+
+  const activeLagna = lagnaForTab[activeTab];
 
   // Re-compute house numbers relative to the active tab's lagna
-  const planetsWithHouse: ChartPlanet[] = PLANETS.map(p => ({
+  const planetsWithHouse: ChartPlanet[] = planets.map(p => ({
     ...p,
-    house: houseOf(p.sign, lagnaSign),
+    house: houseOf(p.sign, activeLagna),
   }));
 
   const tabs: { key: TabKey; icon: string }[] = [
@@ -136,6 +247,26 @@ export default function KundliPage() {
     { key: "Sun",       icon: "☉" },
     { key: "Dasha",     icon: "⏳" },
   ];
+
+  if (!chartLoaded) {
+    return <div className="min-h-screen bg-background-light flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>;
+  }
+
+  if (planets.length === 0) {
+    return (
+      <div className="min-h-screen bg-background-light flex flex-col items-center justify-center px-6 page-enter">
+        <p className="text-slate-400 text-sm mb-4 text-center">Generate your Kundli first to see your birth chart.</p>
+        <button
+          onClick={() => router.push("/")}
+          className="px-6 py-3 rounded-xl border border-primary/30 text-primary text-sm font-semibold bg-primary/5 hover:bg-primary/10 transition-colors"
+        >
+          Generate My Kundli
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -187,7 +318,7 @@ export default function KundliPage() {
         </div>
       </div>
 
-      {/* ── View tabs (Lagna / Moon / Sun / Dasha) ── */}
+      {/* ── View tabs ── */}
       <div className="flex gap-3 px-4 pt-2 pb-1 overflow-x-auto no-scrollbar">
         {tabs.map(({ key, icon }) => {
           const active = activeTab === key;
@@ -213,10 +344,10 @@ export default function KundliPage() {
       <div className="px-5 pt-2 pb-1">
         <p className="text-slate-500 text-xs">
           {TAB_LABEL[activeTab]}
-          {activeTab === "Ascendant" && " · Scorpio · Jyeshtha nakshatra"}
-          {activeTab === "Moon"      && ` · ${SIGN_FULL[MOON_SIGN]} as 1st house`}
-          {activeTab === "Sun"       && ` · ${SIGN_FULL[SUN_SIGN]} as 1st house`}
-          {activeTab === "Dasha"     && " · Vimshottari · Mercury active"}
+          {activeTab === "Ascendant" && ` · ${SIGN_FULL[lagnaSign]}${ascNakshatra ? ` · ${ascNakshatra} nakshatra` : ""}`}
+          {activeTab === "Moon" && ` · ${SIGN_FULL[moonSign]} as 1st house`}
+          {activeTab === "Sun" && ` · ${SIGN_FULL[sunSign]} as 1st house`}
+          {activeTab === "Dasha" && dashaData ? ` · Vimshottari · ${dashaData.currentMahadasha.planet} active` : ""}
         </p>
       </div>
 
@@ -224,36 +355,32 @@ export default function KundliPage() {
       <div className="px-4 pb-2">
         <ChartRenderer
           style={chartStyle}
-          lagnaSign={lagnaSign}
+          lagnaSign={activeLagna}
           planets={planetsWithHouse}
         />
       </div>
 
       {/* ── Dasha tab content ── */}
-      {activeTab === "Dasha" && (
+      {activeTab === "Dasha" && dashaData && (
         <div className="px-4 pb-4">
-          {/* Current Mahadasha summary */}
-          {dashaData && (
-            <div className="mb-3 rounded-xl bg-primary/5 border border-primary/15 px-4 py-3">
-              <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Active Period</p>
-              <p className="font-bold text-base">
-                {dashaData.currentMahadasha.planet} Mahadasha
-                <span className="text-sm font-normal text-slate-500 ml-2">
-                  / {dashaData.currentBhukti.planet} Bhukti
-                </span>
-              </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Bhukti ends {new Date(dashaData.currentBhukti.endDate).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
-                {" · "}{dashaData.percentElapsed}% through Mahadasha
-              </p>
-              <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-primary h-full rounded-full" style={{ width: `${dashaData.percentElapsed}%` }} />
-              </div>
+          <div className="mb-3 rounded-xl bg-primary/5 border border-primary/15 px-4 py-3">
+            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Active Period</p>
+            <p className="font-bold text-base">
+              {dashaData.currentMahadasha.planet} Mahadasha
+              <span className="text-sm font-normal text-slate-500 ml-2">
+                / {dashaData.currentBhukti.planet} Bhukti
+              </span>
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Bhukti ends {new Date(dashaData.currentBhukti.endDate).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
+              {" · "}{dashaData.percentElapsed}% through Mahadasha
+            </p>
+            <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-primary h-full rounded-full" style={{ width: `${dashaData.percentElapsed}%` }} />
             </div>
-          )}
+          </div>
 
-          {/* ── Visual timeline ── */}
-          {dashaData?.allDashas && (
+          {dashaData.allDashas && (
             <div className="mb-3">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1">Life Timeline</p>
               <div className="overflow-x-auto no-scrollbar pb-1">
@@ -265,46 +392,28 @@ export default function KundliPage() {
                     const isPast   = end <= now;
                     const isActive = start <= now && end > now;
                     const yrs  = Math.round((end.getTime() - start.getTime()) / (365.25 * 24 * 3600 * 1000));
-                    // Width proportional to duration (7-20 yrs out of 120)
                     const w = Math.max(44, Math.round(yrs * 3.2));
-                    const sym = PLANETS.find(p => p.name === d.planet)?.symbol ?? d.planet[0];
+                    const cfg = PLANET_CONFIG[d.planet];
+                    const sym = cfg?.symbol ?? d.planet[0];
                     return (
-                      <div
-                        key={`tl-${i}`}
-                        className="flex flex-col items-center gap-1 shrink-0"
-                        style={{ width: w }}
-                      >
+                      <div key={`tl-${i}`} className="flex flex-col items-center gap-1 shrink-0" style={{ width: w }}>
                         <div
                           className="w-full rounded-lg flex flex-col items-center justify-center py-2 px-1 relative"
                           style={{
-                            background: isActive
-                              ? "#d6880a"
-                              : isPast
-                              ? "#f1f5f9"
-                              : "rgba(214,136,10,0.08)",
+                            background: isActive ? "#d6880a" : isPast ? "#f1f5f9" : "rgba(214,136,10,0.08)",
                             border: isActive ? "2px solid #d6880a" : "1px solid rgba(214,136,10,0.15)",
                           }}
                         >
-                          {isActive && (
-                            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white shadow" />
-                          )}
+                          {isActive && <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white shadow" />}
                           <span className="text-sm">{sym}</span>
-                          <span
-                            className="text-[8px] font-bold leading-tight"
-                            style={{ color: isActive ? "#fff" : isPast ? "#94a3b8" : "#92400e" }}
-                          >
-                            {d.planet.slice(0,3)}
+                          <span className="text-[8px] font-bold leading-tight" style={{ color: isActive ? "#fff" : isPast ? "#94a3b8" : "#92400e" }}>
+                            {d.planet.slice(0, 3)}
                           </span>
-                          <span
-                            className="text-[7px] leading-tight"
-                            style={{ color: isActive ? "rgba(255,255,255,0.8)" : "#94a3b8" }}
-                          >
+                          <span className="text-[7px] leading-tight" style={{ color: isActive ? "rgba(255,255,255,0.8)" : "#94a3b8" }}>
                             {yrs}y
                           </span>
                         </div>
-                        <span className="text-[7px] text-slate-400 leading-none">
-                          {start.getFullYear()}
-                        </span>
+                        <span className="text-[7px] text-slate-400 leading-none">{start.getFullYear()}</span>
                       </div>
                     );
                   })}
@@ -314,17 +423,12 @@ export default function KundliPage() {
           )}
 
           <div className="rounded-xl bg-white border border-primary/10 shadow-sm overflow-hidden">
-            {(dashaData?.allDashas ?? [
-              { planet: "Mercury", startDate: "2019-01-01", endDate: "2036-01-01" },
-              { planet: "Ketu",    startDate: "2036-01-01", endDate: "2043-01-01" },
-              { planet: "Venus",   startDate: "2043-01-01", endDate: "2063-01-01" },
-              { planet: "Sun",     startDate: "2063-01-01", endDate: "2069-01-01" },
-            ]).map((d, i) => {
+            {dashaData.allDashas.map((d, i) => {
               const now = new Date();
               const start = new Date(d.startDate);
-              const end   = new Date(d.endDate);
+              const end = new Date(d.endDate);
               const active = start <= now && end > now;
-
+              const cfg = PLANET_CONFIG[d.planet];
               return (
                 <div
                   key={`${d.planet}-${i}`}
@@ -338,17 +442,13 @@ export default function KundliPage() {
                     className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
                     style={{ background: active ? "#d6880a" : "#f1f5f9", color: active ? "#fff" : "#94a3b8" }}
                   >
-                    {PLANETS.find(p => p.name === d.planet)?.symbol ?? d.planet[0]}
+                    {cfg?.symbol ?? d.planet[0]}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-slate-800">{d.planet} Mahadasha</p>
-                    <p className="text-xs text-slate-400">
-                      {start.getFullYear()} – {end.getFullYear()}
-                    </p>
+                    <p className="text-xs text-slate-400">{start.getFullYear()} – {end.getFullYear()}</p>
                   </div>
-                  {active && (
-                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Active</span>
-                  )}
+                  {active && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Active</span>}
                 </div>
               );
             })}
@@ -371,9 +471,10 @@ export default function KundliPage() {
 
           <div className="space-y-2">
             {planetsWithHouse.map((planet) => (
-              <div
+              <button
                 key={planet.name}
-                className="flex items-center gap-3 px-3 py-2.5 bg-white rounded-xl shadow-sm border border-primary/5"
+                onClick={() => setSelectedPlanet(planet)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 bg-white rounded-xl shadow-sm border border-primary/5 text-left active:scale-[0.98] transition-transform"
               >
                 <PlanetSymbol planet={planet} size={38} />
                 <div className="flex-1 min-w-0">
@@ -395,12 +496,111 @@ export default function KundliPage() {
                     {SIGN_FULL[planet.sign] ?? planet.sign}
                   </p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
       )}
 
+      {/* ── Floating AI CTA ── */}
+      <div
+        className="fixed left-1/2 z-30"
+        style={{
+          bottom: "calc(env(safe-area-inset-bottom) + 80px)",
+          transform: "translateX(-50%)",
+          width: "min(400px, calc(100vw - 32px))",
+        }}
+      >
+        <button
+          onClick={() => router.push("/consult")}
+          className="w-full rounded-2xl p-4 flex items-center gap-3 shadow-lg active:scale-[0.97] transition-transform"
+          style={{
+            background: "linear-gradient(135deg, #d6880a 0%, #f5c200 100%)",
+            boxShadow: "0 8px 30px rgba(214,136,10,0.35)",
+          }}
+        >
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            <SparkleIcon size={20} weight="fill" className="text-white" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-bold text-white">What does my chart mean?</p>
+            <p className="text-[11px] text-white/70">Tap to get a personal AI reading</p>
+          </div>
+          <span className="text-white text-lg font-bold">→</span>
+        </button>
+      </div>
+
+      {/* ── Planet Explanation Bottom Sheet ── */}
+      {selectedPlanet && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: "rgba(0,0,0,0.4)" }}
+          onClick={() => setSelectedPlanet(null)}
+        >
+          <div
+            className="w-full bg-white rounded-t-3xl shadow-2xl animate-slide-up"
+            style={{ maxWidth: 430, paddingBottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mt-3 mb-4" />
+            <div className="px-6 pb-6">
+              <div className="flex items-center gap-4 mb-5">
+                <PlanetSymbol planet={selectedPlanet} size={52} />
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    {selectedPlanet.name} {selectedPlanet.symbol}
+                  </h3>
+                  <p className="text-sm text-slate-400">
+                    {SIGN_FULL[selectedPlanet.sign]} · House {selectedPlanet.house} · {selectedPlanet.degree.toFixed(1)}°
+                    {selectedPlanet.retrograde && " · Retrograde"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-xl p-4" style={{ background: selectedPlanet.bg, border: `1px solid ${selectedPlanet.color}20` }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: selectedPlanet.color }}>
+                    What {selectedPlanet.name} Represents
+                  </p>
+                  <p className="text-sm text-slate-700 leading-relaxed">
+                    {PLANET_MEANING[selectedPlanet.name] || "A significant celestial influence in your chart."}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-slate-50 p-4 border border-slate-100">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">In Your Chart</p>
+                  <p className="text-sm text-slate-700 leading-relaxed">
+                    Your {selectedPlanet.name} expresses itself {SIGN_QUALITY[selectedPlanet.sign] || "uniquely"} through the area of <strong>{HOUSE_MEANING[selectedPlanet.house]?.split("—")[0]?.trim() || `House ${selectedPlanet.house}`}</strong>.
+                  </p>
+                  <p className="text-sm text-slate-500 leading-relaxed mt-2">
+                    {HOUSE_MEANING[selectedPlanet.house]?.split("—")[1]?.trim() || ""}
+                  </p>
+                  {selectedPlanet.retrograde && (
+                    <p className="text-sm text-slate-500 leading-relaxed mt-2">
+                      <span className="font-semibold text-slate-700">Retrograde</span> means this energy turns inward — you may process {selectedPlanet.name.toLowerCase()}&apos;s themes more privately or revisit past patterns related to this area.
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-xl p-4" style={{ background: "rgba(214,136,10,0.04)", border: "1px solid rgba(214,136,10,0.1)" }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Nakshatra</p>
+                  <p className="text-sm text-slate-700 leading-relaxed">
+                    Your {selectedPlanet.name} is in <strong>{selectedPlanet.nakshatra}</strong> nakshatra — a lunar mansion that adds a specific flavour to how this planet expresses in your life.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => { setSelectedPlanet(null); router.push("/consult"); }}
+                className="w-full mt-5 py-3 rounded-xl text-sm font-semibold text-white active:scale-[0.98] transition-transform"
+                style={{ background: "linear-gradient(135deg, #d6880a 0%, #f5c200 100%)" }}
+              >
+                Ask AI about my {selectedPlanet.name} placement →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

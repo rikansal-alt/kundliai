@@ -389,7 +389,9 @@ function HomeContent() {
                   <SunIcon size={20} weight="thin" className="text-primary opacity-60" />
                 </div>
                 <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
-                  &ldquo;Jupiter&apos;s influence strengthens your path today — a favourable time for new intentions and purposeful action.&rdquo;
+                  &ldquo;{chart?.moonSign
+                    ? `With your ${chart.moonSign} Moon, today's energy favours bold intentions and purposeful action.`
+                    : "Jupiter's influence strengthens your path today — a favourable time for new intentions and purposeful action."}&rdquo;
                 </blockquote>
                 <div className="flex gap-2">
                   {[
@@ -422,7 +424,9 @@ function HomeContent() {
                   <MoonIcon size={20} weight="thin" className="text-indigo-500 opacity-60" />
                 </div>
                 <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
-                  &ldquo;Venus graces your evening — let creativity flow and cherish moments of beauty and connection.&rdquo;
+                  &ldquo;{chart?.ascendant
+                    ? `Your ${chart.ascendant} ascendant draws in reflective evening energy — let creativity flow and cherish beauty.`
+                    : "Venus graces your evening — let creativity flow and cherish moments of beauty and connection."}&rdquo;
                 </blockquote>
                 <div className="flex gap-2">
                   {[
@@ -455,7 +459,9 @@ function HomeContent() {
                   <SunIcon size={20} weight="thin" className="text-sky-500 opacity-60" />
                 </div>
                 <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
-                  &ldquo;Mercury rises strong tomorrow — expect clarity in communication and swift progress on pending matters.&rdquo;
+                  &ldquo;{chart?.sunSign
+                    ? `Your ${chart.sunSign} Sun illuminates tomorrow — expect clarity in communication and swift progress.`
+                    : "Mercury rises strong tomorrow — expect clarity in communication and swift progress on pending matters."}&rdquo;
                 </blockquote>
                 <div className="flex gap-2">
                   {[

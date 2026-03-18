@@ -334,6 +334,7 @@ export default function DailyGuidancePage() {
   const [chart, setChart] = useState<ChartSnap | null>(null);
   const [guidance, setGuidance] = useState<DailyGuidance | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [muhurats, setMuhurats] = useState<{ label: string; time: string }[]>([]);
 
   useEffect(() => {
     try {
@@ -355,6 +356,53 @@ export default function DailyGuidancePage() {
       }
     } catch { /* ignore */ }
     setIsLoaded(true);
+
+    // Fetch real muhurat times from panchang API
+    let lat = 28.6139, lng = 77.209; // Delhi default
+    try {
+      const raw = localStorage.getItem("kundliai_chart");
+      if (raw) {
+        const snap = JSON.parse(raw);
+        if (snap.meta?.birthDetails?.lat) { lat = snap.meta.birthDetails.lat; lng = snap.meta.birthDetails.lng; }
+      }
+    } catch { /* ignore */ }
+
+    fetch(`/api/panchang?lat=${lat}&lng=${lng}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.muhurats) {
+          // Convert UTC minutes to local time strings
+          const tzOffset = data.locationTimezone
+            ? (() => {
+                const now = new Date();
+                const fmt = new Intl.DateTimeFormat("en-US", {
+                  timeZone: data.locationTimezone, hour: "2-digit", minute: "2-digit", hour12: true,
+                });
+                // Use the pre-formatted times from the API
+                return 0; // placeholder
+              })()
+            : 0;
+
+          const toTimeStr = (utcMin: number) => {
+            // Derive offset from timezone
+            const now = new Date();
+            const utcStr = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, utcMin).toLocaleTimeString("en-US", {
+              timeZone: data.locationTimezone || "Asia/Kolkata",
+              hour: "numeric", minute: "2-digit", hour12: true,
+            });
+            return utcStr;
+          };
+
+          const muhList: { label: string; time: string }[] = data.muhurats.map((m: { name: string; startUtcMin: number; endUtcMin: number }) => ({
+            label: m.name,
+            time: `${toTimeStr(m.startUtcMin)} – ${toTimeStr(m.endUtcMin)}`,
+          }));
+
+          void tzOffset; // suppress unused warning
+          setMuhurats(muhList);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const todayFormatted = new Date().toLocaleDateString("en-US", {
@@ -549,11 +597,9 @@ export default function DailyGuidancePage() {
               </div>
 
               <div className="space-y-3">
-                {[
-                  { label: "Abhijit Muhurat", time: "11:42 AM – 12:28 PM" },
-                  { label: "Amrit Kaal",      time: "04:15 PM – 05:40 PM" },
-                  { label: "Brahma Muhurat",   time: "04:45 AM – 05:33 AM" },
-                ].map((row) => (
+                {(muhurats.length > 0 ? muhurats : [
+                  { label: "Loading...", time: "—" },
+                ]).map((row) => (
                   <div key={row.label} className="flex items-center justify-between">
                     <span className="text-xs text-slate-500">{row.label}</span>
                     <span className="text-xs font-semibold text-primary">{row.time}</span>
