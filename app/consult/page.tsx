@@ -28,15 +28,39 @@ function ConsultContent() {
   const consultationIdRef = useRef<string | null>(null);
   const chartDataRef = useRef<Record<string, unknown> | null>(null);
 
-  // Load the REAL chart from localStorage on mount
+  // Load chart data from all available sources
   useEffect(() => {
     try {
+      // 1. Try guest session (has full chart object)
       const guestSession = getGuestSession();
       if (guestSession?.chartData) {
         chartDataRef.current = guestSession.chartData as Record<string, unknown>;
+        return;
+      }
+
+      // 2. Try localStorage snapshot (works for both guest and registered)
+      const raw = localStorage.getItem("kundliai_chart");
+      if (raw) {
+        const snap = JSON.parse(raw);
+        if (snap?.moonSign) {
+          chartDataRef.current = snap as Record<string, unknown>;
+          return;
+        }
       }
     } catch { /* ignore */ }
-  }, []);
+
+    // 3. Fetch from DB for registered users
+    if (userId) {
+      fetch(`/api/chart/${userId}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.chart?.chartData) {
+            chartDataRef.current = d.chart.chartData as Record<string, unknown>;
+          }
+        })
+        .catch(() => {});
+    }
+  }, [userId]);
 
   const [messages, setMessages] = useState<Message[]>([
     { id: "1", role: "assistant", text: "Namaste! I am your AI Jyotish consultant. How can I guide you today?" },
