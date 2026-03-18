@@ -70,7 +70,7 @@ export const ConsultMessageSchema = z.object({
   content: z
     .string()
     .min(1, "Message required")
-    .max(500, "Message too long — max 500 chars")
+    .max(5000, "Message too long")
     .transform(stripHtml),
   role: z.enum(["user", "assistant"]),
 });
