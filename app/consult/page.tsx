@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SunIcon, DotsThreeVerticalIcon, SparkleIcon, PaperPlaneTiltIcon, PlusCircleIcon, UserIcon, BriefcaseIcon, HeartIcon, HeartbeatIcon } from "@phosphor-icons/react";
+import { SunIcon, DotsThreeVerticalIcon, SparkleIcon, PaperPlaneTiltIcon, PlusCircleIcon, UserIcon } from "@phosphor-icons/react";
 import SoftLoginPrompt from "@/components/SoftLoginPrompt";
 import { getGuestSession, incrementConsultCount, hasReachedConsultLimit, FREE_CONSULT_LIMIT } from "@/lib/guestSession";
 
@@ -13,10 +13,10 @@ interface Message {
 }
 
 const SUGGESTIONS = [
-  { label: "✨ Daily Horoscope", icon: SparkleIcon },
-  { label: "💼 Career Advice", icon: BriefcaseIcon },
-  { label: "❤️ Relationship Harmony", icon: HeartIcon },
-  { label: "🧘 Health Tips", icon: HeartbeatIcon },
+  { label: "✨ Daily Horoscope", query: "What does my chart say for today?" },
+  { label: "💼 Career Advice", query: "What does my chart say about my career path?" },
+  { label: "❤️ Relationships", query: "What do my planetary positions say about love and relationships?" },
+  { label: "🧘 Health & Wellness", query: "What does my chart reveal about my health and wellbeing?" },
 ];
 
 function ConsultContent() {
@@ -359,10 +359,10 @@ function ConsultContent() {
         )}
         {/* Chips */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-          {SUGGESTIONS.map(({ label }) => (
+          {SUGGESTIONS.map(({ label, query }) => (
             <button
               key={label}
-              onClick={() => handleSend(label.split(" ").slice(1).join(" "))}
+              onClick={() => handleSend(query)}
               className="whitespace-nowrap px-4 py-2 rounded-full bg-white border border-primary/20 text-slate-700 text-sm font-medium hover:border-primary transition-colors shadow-sm"
             >
               {label}

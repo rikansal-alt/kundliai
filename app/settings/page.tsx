@@ -94,29 +94,31 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Danger zone */}
-        <section>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-1">Account Actions</p>
-          <div className="bg-slate-50 rounded-2xl overflow-hidden">
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 transition-colors border-b border-slate-100"
-            >
-              <SignOutIcon className="w-4 h-4 text-red-500" weight="thin" />
-              <span className="text-red-500 text-sm font-medium">Sign Out</span>
-            </button>
-            <button
-              onClick={handleDeleteAccount}
-              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 transition-colors"
-            >
-              <TrashIcon className="w-4 h-4 text-red-400" weight="thin" />
-              <div className="text-left">
-                <p className="text-red-400 text-sm font-medium">Delete Account</p>
-                <p className="text-slate-400 text-[11px]">Permanently remove your data — 45 day processing time</p>
-              </div>
-            </button>
-          </div>
-        </section>
+        {/* Danger zone — only for logged-in users */}
+        {session?.user && (
+          <section>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-1">Account Actions</p>
+            <div className="bg-slate-50 rounded-2xl overflow-hidden">
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 transition-colors border-b border-slate-100"
+              >
+                <SignOutIcon className="w-4 h-4 text-red-500" weight="thin" />
+                <span className="text-red-500 text-sm font-medium">Sign Out</span>
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 transition-colors"
+              >
+                <TrashIcon className="w-4 h-4 text-red-400" weight="thin" />
+                <div className="text-left">
+                  <p className="text-red-400 text-sm font-medium">Delete Account</p>
+                  <p className="text-slate-400 text-[11px]">Permanently remove your data — 45 day processing time</p>
+                </div>
+              </button>
+            </div>
+          </section>
+        )}
 
         {/* Follow Us */}
         <section>
