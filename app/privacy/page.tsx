@@ -83,9 +83,10 @@ export default function PrivacyPage() {
         <Section title="4. Data Sharing">
           <p>We share data only with:</p>
           <ul className="list-disc pl-5 mt-1 space-y-1">
-            <li><strong>Anthropic</strong> — AI consultation text is processed by Anthropic&apos;s Claude API. Your birth chart details may be included in consultation context. Anthropic&apos;s privacy policy applies to this processing.</li>
-            <li><strong>MongoDB Atlas</strong> — Chart and consultation data is stored in MongoDB Atlas (cloud database). Data is encrypted at rest and in transit.</li>
-            <li><strong>Payment processors</strong> — If you subscribe, payment is handled by Razorpay or Stripe. We never store your full card number.</li>
+            <li><strong>Authentication provider</strong> — If you sign in with Google, we receive your name, email, and profile photo.</li>
+            <li><strong>AI provider</strong> — Your consultation messages and birth chart details are processed by our AI partner to generate astrological guidance.</li>
+            <li><strong>Cloud infrastructure</strong> — Your data is stored securely with encryption at rest and in transit.</li>
+            <li><strong>Payment processors</strong> — If you subscribe, payment is handled by a third-party processor. We never store your full card number.</li>
           </ul>
         </Section>
 
