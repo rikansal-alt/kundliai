@@ -127,7 +127,8 @@ export async function POST(req: NextRequest) {
     let body;
     try {
       body = await req.json();
-    } catch {
+    } catch (parseErr) {
+      safeLog("error", "JSON parse error:", { error: String(parseErr) });
       return new Response(
         JSON.stringify({ error: "Invalid request body" }),
         { status: 400, headers: { "Content-Type": "application/json" } },
