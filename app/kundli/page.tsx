@@ -171,7 +171,7 @@ export default function KundliPage() {
   const [chartLoaded,  setChartLoaded]  = useState(false);
   const [ascNakshatra, setAscNakshatra] = useState("");
 
-  // Load chart data from localStorage
+  // Load chart data from localStorage, fallback to guest session or API
   useEffect(() => {
     try {
       const raw = localStorage.getItem("kundliai_chart");
@@ -189,9 +189,42 @@ export default function KundliPage() {
         setAscNakshatra(snap.ascendant.nakshatra);
       }
 
-      // Planets
+      // Planets — try localStorage first, then guest session
       if (snap.planets) {
         setPlanets(convertPlanets(snap.planets, ascAbbr as SignAbbr));
+      } else {
+        // Check guest session for full chart data
+        try {
+          const guestRaw = localStorage.getItem("kundliai_guest");
+          if (guestRaw) {
+            const guest = JSON.parse(guestRaw);
+            if (guest?.chartData?.planets) {
+              setPlanets(convertPlanets(guest.chartData.planets, ascAbbr as SignAbbr));
+              // Backfill localStorage with planets for next time
+              snap.planets = guest.chartData.planets;
+              if (guest.chartData.ascendant) snap.ascendant = guest.chartData.ascendant;
+              if (guest.chartData.meta) snap.meta = guest.chartData.meta;
+              localStorage.setItem("kundliai_chart", JSON.stringify(snap));
+            }
+          }
+        } catch { /* ignore */ }
+
+        // If still no planets, try fetching from API
+        if (snap.userId) {
+          fetch(`/api/chart/load?userId=${encodeURIComponent(snap.userId)}`)
+            .then(r => r.json())
+            .then(data => {
+              if (data?.chart?.chartData?.planets) {
+                const p = data.chart.chartData.planets;
+                setPlanets(convertPlanets(p, ascAbbr as SignAbbr));
+                // Backfill localStorage
+                snap.planets = p;
+                if (data.chart.chartData.ascendant) snap.ascendant = data.chart.chartData.ascendant;
+                localStorage.setItem("kundliai_chart", JSON.stringify(snap));
+              }
+            })
+            .catch(() => {});
+        }
       }
 
       // Mahadasha

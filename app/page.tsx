@@ -194,7 +194,7 @@ export default function LandingPage() {
       const marsPlanet = c.planets?.Mars as { house?: number } | undefined;
       const snap = {
         name:          form.name,
-        ascendant:     c.ascendant?.sign ?? "",
+        ascendant:     c.ascendant ?? "",
         moonSign:      c.moonSign ?? "",
         sunSign:       c.sunSign  ?? "",
         moonSignIndex: moonPlanet?.signIndex ?? 0,
@@ -204,6 +204,8 @@ export default function LandingPage() {
         lng:           c.meta?.birthDetails?.lng  ?? null,
         mahadasha:     c.mahadasha ?? null,
         rawMahadasha:  c.mahadasha ?? null,
+        planets:       c.planets ?? null,
+        meta:          c.meta ?? null,
         userId,
       };
       localStorage.setItem("kundliai_chart", JSON.stringify(snap));
@@ -254,6 +256,9 @@ export default function LandingPage() {
             },
           }),
         });
+        if (!saveRes.ok) {
+          console.error("Chart save HTTP error:", saveRes.status, await saveRes.text().catch(() => ""));
+        }
         if (saveRes.ok) {
           const saved = await saveRes.json();
           chartId = saved.chartId ?? "";
@@ -265,8 +270,9 @@ export default function LandingPage() {
             } catch { /* ignore */ }
           }
         }
-      } catch {
+      } catch (saveErr) {
         // DB save is non-blocking; chart is already in localStorage
+        console.error("Chart save failed:", saveErr);
       }
 
       const params = new URLSearchParams({

@@ -20,8 +20,10 @@ interface SavedChart {
     moonSign?: string;
     ascendant?: string;
     sunSign?: string;
+    planets?: Record<string, unknown>;
     raw?: {
       mahadasha?: unknown;
+      planets?: Record<string, unknown>;
       moonSignIndex?: number;
       moonNakshatra?: string;
       marsHouse?: number | null;
@@ -65,6 +67,8 @@ export default function ChartsPage() {
         sunSign:       chart.chartData?.sunSign   ?? "",
         mahadasha:     raw?.mahadasha ?? null,
         rawMahadasha:  raw?.mahadasha ?? null,
+        planets:       chart.chartData?.planets ?? raw?.planets ?? null,
+        meta:          raw?.meta ?? null,
         moonSignIndex: raw?.moonSignIndex ?? 0,
         moonNakshatra: raw?.moonNakshatra ?? "",
         marsHouse:     raw?.marsHouse ?? null,
