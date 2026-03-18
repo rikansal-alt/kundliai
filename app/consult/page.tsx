@@ -181,15 +181,20 @@ function ConsultContent() {
       setMessages((prev) => [...prev, aiMsg]);
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          aiText += decoder.decode(value, { stream: true });
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { ...aiMsg, text: aiText };
-            return updated;
-          });
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            aiText += decoder.decode(value, { stream: true });
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = { ...aiMsg, text: aiText };
+              return updated;
+            });
+          }
+        } catch {
+          // Stream interrupted — keep whatever text arrived
+          if (!aiText) throw new Error("stream_failed");
         }
       }
 

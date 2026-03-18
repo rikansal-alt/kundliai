@@ -233,7 +233,12 @@ NEVER:
           controller.close();
         } catch (err) {
           safeLog("error", "Stream error:", { error: String(err) });
-          controller.error(err);
+          // If we already sent some content, close gracefully instead of erroring
+          if (fullText.length > 0) {
+            controller.close();
+          } else {
+            controller.error(err);
+          }
         }
       },
     });
