@@ -32,7 +32,11 @@ export default function LandingPage() {
   }, [saving]);
 
   // Returning guest: if they already have a chart in localStorage, go straight to /home
+  // Skip redirect if ?new=1 is in the URL (user wants to create a new chart)
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("new") === "1") return;
+
     try {
       const snap = JSON.parse(localStorage.getItem("kundliai_chart") ?? "{}");
       if (snap?.name && snap?.moonSign) {

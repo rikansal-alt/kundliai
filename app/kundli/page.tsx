@@ -113,7 +113,7 @@ function convertPlanets(
         sign: signAbbr as SignAbbr,
         house: houseOf(signAbbr as SignAbbr, lagnaAbbr),
         degree: p.degree,
-        nakshatra: p.nakshatra,
+        nakshatra: p.nakshatra || "",
         color: config.color,
         bg: config.bg,
         symbol: config.symbol,
@@ -572,64 +572,77 @@ export default function KundliPage() {
         >
           <div
             className="w-full bg-white rounded-t-3xl shadow-2xl animate-slide-up"
-            style={{ maxWidth: 430, paddingBottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
+            style={{ maxWidth: 430, maxHeight: "75vh" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mt-3 mb-4" />
-            <div className="px-6 pb-6">
-              <div className="flex items-center gap-4 mb-5">
-                <PlanetSymbol planet={selectedPlanet} size={52} />
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">
-                    {selectedPlanet.name} {selectedPlanet.symbol}
+            {/* Drag handle */}
+            <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mt-3 mb-2" />
+
+            {/* Scrollable content */}
+            <div className="overflow-y-auto px-6 pb-6 no-scrollbar" style={{ maxHeight: "calc(75vh - 20px)", WebkitOverflowScrolling: "touch" }}>
+              {/* Planet header + close */}
+              <div className="flex items-center gap-3 py-4 sticky top-0 bg-white z-10">
+                <PlanetSymbol planet={selectedPlanet} size={48} />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {selectedPlanet.name}
                   </h3>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-xs text-slate-400">
                     {SIGN_FULL[selectedPlanet.sign]} · House {selectedPlanet.house} · {selectedPlanet.degree.toFixed(1)}°
-                    {selectedPlanet.retrograde && " · Retrograde"}
+                    {selectedPlanet.retrograde && " · ℞ Retrograde"}
                   </p>
                 </div>
+                <button
+                  onClick={() => setSelectedPlanet(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 shrink-0"
+                >
+                  ✕
+                </button>
               </div>
 
-              <div className="space-y-4">
-                <div className="rounded-xl p-4" style={{ background: selectedPlanet.bg, border: `1px solid ${selectedPlanet.color}20` }}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: selectedPlanet.color }}>
+              <div className="space-y-3">
+                {/* What it represents */}
+                <div className="rounded-xl p-4" style={{ background: selectedPlanet.bg, border: `1px solid ${selectedPlanet.color}15` }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: selectedPlanet.color }}>
                     What {selectedPlanet.name} Represents
                   </p>
-                  <p className="text-sm text-slate-700 leading-relaxed">
+                  <p className="text-[13px] text-slate-600 leading-relaxed">
                     {PLANET_MEANING[selectedPlanet.name] || "A significant celestial influence in your chart."}
                   </p>
                 </div>
 
+                {/* In your chart */}
                 <div className="rounded-xl bg-slate-50 p-4 border border-slate-100">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">In Your Chart</p>
-                  <p className="text-sm text-slate-700 leading-relaxed">
-                    Your {selectedPlanet.name} expresses itself {SIGN_QUALITY[selectedPlanet.sign] || "uniquely"} through the area of <strong>{HOUSE_MEANING[selectedPlanet.house]?.split("—")[0]?.trim() || `House ${selectedPlanet.house}`}</strong>.
-                  </p>
-                  <p className="text-sm text-slate-500 leading-relaxed mt-2">
-                    {HOUSE_MEANING[selectedPlanet.house]?.split("—")[1]?.trim() || ""}
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">In Your Chart</p>
+                  <p className="text-[13px] text-slate-600 leading-relaxed">
+                    Your {selectedPlanet.name} expresses itself {SIGN_QUALITY[selectedPlanet.sign] || "uniquely"} through <strong className="text-slate-800">{HOUSE_MEANING[selectedPlanet.house]?.split("—")[0]?.trim() || `House ${selectedPlanet.house}`}</strong> — {HOUSE_MEANING[selectedPlanet.house]?.split("—")[1]?.trim().toLowerCase() || ""}.
                   </p>
                   {selectedPlanet.retrograde && (
-                    <p className="text-sm text-slate-500 leading-relaxed mt-2">
-                      <span className="font-semibold text-slate-700">Retrograde</span> means this energy turns inward — you may process {selectedPlanet.name.toLowerCase()}&apos;s themes more privately or revisit past patterns related to this area.
+                    <p className="text-[13px] text-slate-500 leading-relaxed mt-2 pt-2 border-t border-slate-100">
+                      <span className="font-semibold text-slate-700">℞ Retrograde</span> — this energy turns inward. You process {selectedPlanet.name.toLowerCase()}&apos;s themes more privately and may revisit past patterns in this area.
                     </p>
                   )}
                 </div>
 
-                <div className="rounded-xl p-4" style={{ background: "rgba(214,136,10,0.04)", border: "1px solid rgba(214,136,10,0.1)" }}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Nakshatra</p>
-                  <p className="text-sm text-slate-700 leading-relaxed">
-                    Your {selectedPlanet.name} is in <strong>{selectedPlanet.nakshatra}</strong> nakshatra — a lunar mansion that adds a specific flavour to how this planet expresses in your life.
-                  </p>
-                </div>
-              </div>
+                {/* Nakshatra */}
+                {selectedPlanet.nakshatra && (
+                  <div className="rounded-xl p-4" style={{ background: "rgba(214,136,10,0.04)", border: "1px solid rgba(214,136,10,0.1)" }}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1.5">Nakshatra</p>
+                    <p className="text-[13px] text-slate-600 leading-relaxed">
+                      <strong className="text-slate-800">{selectedPlanet.nakshatra}</strong> — a lunar mansion that shapes how your {selectedPlanet.name} expresses in your life.
+                    </p>
+                  </div>
+                )}
 
-              <button
-                onClick={() => { setSelectedPlanet(null); router.push("/consult"); }}
-                className="w-full mt-5 py-3 rounded-xl text-sm font-semibold text-white active:scale-[0.98] transition-transform"
-                style={{ background: "linear-gradient(135deg, #d6880a 0%, #f5c200 100%)" }}
-              >
-                Ask AI about my {selectedPlanet.name} placement →
-              </button>
+                {/* Ask AI CTA */}
+                <button
+                  onClick={() => { setSelectedPlanet(null); router.push("/consult"); }}
+                  className="w-full py-3.5 rounded-xl text-sm font-semibold text-white active:scale-[0.98] transition-transform"
+                  style={{ background: "linear-gradient(135deg, #d6880a 0%, #f5c200 100%)", boxShadow: "0 4px 12px rgba(214,136,10,0.3)" }}
+                >
+                  Ask AI about my {selectedPlanet.name} →
+                </button>
+              </div>
             </div>
           </div>
         </div>

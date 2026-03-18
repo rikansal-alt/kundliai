@@ -156,7 +156,10 @@ function ConsultContent() {
         method: "POST",
         headers: guestHeaders,
         body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.text })),
+          messages: [...messages, userMsg]
+            .filter((m) => m.id !== "1" && m.id !== "err" && m.text.trim()) // skip greeting, errors, empty
+            .slice(-10) // keep last 10 messages to avoid oversized requests
+            .map((m) => ({ role: m.role, content: m.text })),
           chart: safeChart,
           userName: name || "Friend",
         }),
@@ -215,10 +218,15 @@ function ConsultContent() {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg === "limit_reached") {
         // Don't add an error message — the banner handles it
+      } else if (msg === "stream_failed") {
+        setMessages((prev) => [
+          ...prev,
+          { id: `err-${Date.now()}`, role: "assistant", text: "Connection interrupted. Please try again." },
+        ]);
       } else {
         setMessages((prev) => [
           ...prev,
-          { id: "err", role: "assistant", text: "Something went wrong. Please try again." },
+          { id: `err-${Date.now()}`, role: "assistant", text: "Something went wrong. Please try again." },
         ]);
       }
     } finally {

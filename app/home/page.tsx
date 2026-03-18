@@ -235,11 +235,10 @@ function HomeContent() {
             </button>
           ) : (
             <button
-              onClick={() => router.push("/")}
-              className="text-slate-900 p-2 rounded-full hover:bg-primary/10 transition-colors"
-              title="New chart"
+              onClick={() => router.push("/?new=1")}
+              className="flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/8 border border-primary/20 px-3 py-1.5 rounded-full hover:bg-primary/15 transition-colors"
             >
-              <SunIcon size={24} weight="thin" />
+              + New Chart
             </button>
           )}
         </div>

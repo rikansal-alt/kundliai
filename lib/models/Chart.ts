@@ -7,6 +7,11 @@ export interface PlanetData {
   exalted?: boolean;
   debilitated?: boolean;
   retrograde?: boolean;
+  nakshatra?: string;
+  nakshatraLord?: string;
+  nakshatraPada?: number;
+  longitude?: number;
+  signIndex?: number;
 }
 
 export interface MahadashaData {
@@ -51,12 +56,17 @@ export interface IChart extends Document {
 
 const PlanetSchema = new Schema<PlanetData>(
   {
-    sign:        { type: String, required: true },
-    house:       { type: Number, required: true },
-    degree:      { type: Number, required: true },
-    exalted:     Boolean,
-    debilitated: Boolean,
-    retrograde:  Boolean,
+    sign:           { type: String, required: true },
+    house:          { type: Number, required: true },
+    degree:         { type: Number, required: true },
+    exalted:        Boolean,
+    debilitated:    Boolean,
+    retrograde:     Boolean,
+    nakshatra:      String,
+    nakshatraLord:  String,
+    nakshatraPada:  Number,
+    longitude:      Number,
+    signIndex:      Number,
   },
   { _id: false }
 );
