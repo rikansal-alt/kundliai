@@ -20,7 +20,16 @@ export default function LandingPage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [detecting, setDetecting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Educational loading step timer
+  useEffect(() => {
+    if (!saving) { setLoadingStep(0); return; }
+    const t1 = setTimeout(() => setLoadingStep(1), 2000);
+    const t2 = setTimeout(() => setLoadingStep(2), 4000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [saving]);
 
   // Returning guest: if they already have a chart in localStorage, go straight to /home
   useEffect(() => {
@@ -145,6 +154,7 @@ export default function LandingPage() {
     e.preventDefault();
     if (!form.name || !form.dob || !form.city) return;
     setSaving(true);
+    setLoadingStep(0);
     setError(null);
 
     // Use stable googleId when signed in; fall back to name_dob for guests
@@ -275,11 +285,58 @@ export default function LandingPage() {
     }
   };
 
+  const LOADING_STEPS = [
+    { title: "Calculating planetary positions…", sub: "Using precise astronomical data — the same system professional Vedic astrologers use" },
+    { title: "Finding your nakshatra…", sub: "Your Moon nakshatra reveals your deepest emotional patterns and life purpose" },
+    { title: "Preparing your personal reading…", sub: "Your chart is unique to the exact minute and place of your birth" },
+  ];
+
   return (
     <div
       className="w-full px-6 flex flex-col items-center mx-auto min-h-screen page-enter"
       style={{ paddingTop: "calc(env(safe-area-inset-top) + 40px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 32px)" }}
     >
+      {/* Educational loading overlay */}
+      {saving && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm px-8">
+          {/* Spinning sun */}
+          <div className="mb-10 relative">
+            <div className="w-20 h-20 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <SunIcon className="text-primary w-8 h-8" weight="thin" />
+            </div>
+          </div>
+
+          {/* Steps */}
+          <div className="space-y-6 max-w-[300px]">
+            {LOADING_STEPS.map((step, i) => (
+              <div
+                key={i}
+                className="transition-all duration-500"
+                style={{
+                  opacity: loadingStep >= i ? 1 : 0.2,
+                  transform: loadingStep >= i ? "translateY(0)" : "translateY(8px)",
+                }}
+              >
+                <p className="text-sm font-semibold text-slate-800 text-center">{step.title}</p>
+                <p className="text-[11px] text-slate-400 text-center mt-1 leading-relaxed">{step.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress dots */}
+          <div className="flex gap-2 mt-10">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full transition-colors duration-300"
+                style={{ background: loadingStep >= i ? "#d6880a" : "rgba(214,136,10,0.2)" }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Logo */}
       <div className="mb-8 relative flex items-center justify-center">
         {/* Outer glow ring */}

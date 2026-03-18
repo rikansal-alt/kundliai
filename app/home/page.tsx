@@ -40,6 +40,18 @@ function fmtDate(iso: string): string {
 
 // ─── Main content ─────────────────────────────────────────────────────────────
 
+interface ChartSummary {
+  greeting: string;
+  ascendant: string;
+  moon: string;
+  sun: string;
+  standout: string;
+  standoutPlanet: string;
+  standoutSign: string;
+  dasha: string;
+  oneWord: string;
+}
+
 function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -48,7 +60,10 @@ function HomeContent() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [showProfile,   setShowProfile]   = useState(false);
+  const [summary, setSummary] = useState<ChartSummary | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const migrationAttemptedRef = useRef(false);
+  const summaryFetchedRef = useRef(false);
 
   const chartName = searchParams.get("name") || chart?.name || "Friend";
   // Greeting name: Google display name > email prefix > chart birth name
@@ -88,6 +103,56 @@ function HomeContent() {
       }
     });
   }, [status, session]);
+
+  // Fetch plain English summary when chart is available
+  useEffect(() => {
+    if (!chart || summaryFetchedRef.current) return;
+    // Check cache first
+    try {
+      const cached = localStorage.getItem("kundliai_summary");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Cache valid for same chart (check ascendant + moonSign)
+        if (parsed.ascendant === chart.ascendant && parsed.moonSign === chart.moonSign) {
+          setSummary(parsed.summary);
+          summaryFetchedRef.current = true;
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+
+    summaryFetchedRef.current = true;
+    setSummaryLoading(true);
+
+    // Get full chart data from localStorage for the API
+    let fullChart = {};
+    try {
+      const raw = localStorage.getItem("kundliai_chart");
+      if (raw) fullChart = JSON.parse(raw);
+    } catch { /* ignore */ }
+
+    fetch("/api/chart-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chart: fullChart, name: chartName }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.summary) {
+          setSummary(data.summary);
+          // Cache it
+          try {
+            localStorage.setItem("kundliai_summary", JSON.stringify({
+              ascendant: chart.ascendant,
+              moonSign: chart.moonSign,
+              summary: data.summary,
+            }));
+          } catch { /* ignore */ }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setSummaryLoading(false));
+  }, [chart, chartName]);
 
   const maha  = chart?.mahadasha?.currentMahadasha;
   const bhukti = chart?.mahadasha?.currentBhukti;
@@ -200,6 +265,109 @@ function HomeContent() {
           </span>
         </div>
       </header>
+
+      {/* ── Plain English Summary Card ── */}
+      {(summary || summaryLoading) && (
+        <section className="px-6 pb-2">
+          <div
+            className="rounded-2xl p-5 relative overflow-hidden"
+            style={{
+              background: "#fffcf5",
+              borderLeft: "4px solid #d6880a",
+              boxShadow: "0 1px 12px rgba(214,136,10,0.06)",
+            }}
+          >
+            {summaryLoading ? (
+              <div className="space-y-3 animate-pulse">
+                <div className="h-4 bg-primary/10 rounded w-3/4" />
+                <div className="h-3 bg-primary/5 rounded w-full" />
+                <div className="h-3 bg-primary/5 rounded w-5/6" />
+                <div className="h-3 bg-primary/5 rounded w-full" />
+                <div className="h-3 bg-primary/5 rounded w-2/3" />
+              </div>
+            ) : summary ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                    Your Chart in Plain English
+                  </p>
+                  {summary.oneWord && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                      style={{ color: "#d6880a", background: "rgba(214,136,10,0.08)", border: "1px solid rgba(214,136,10,0.15)" }}>
+                      {summary.oneWord}
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {summary.greeting}
+                </p>
+
+                <div className="space-y-3">
+                  <div className="flex gap-3 items-start">
+                    <span className="text-lg mt-0.5">🌅</span>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      <span className="font-semibold text-slate-800">Rising Sign — </span>
+                      {summary.ascendant}
+                    </p>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="text-lg mt-0.5">🌙</span>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      <span className="font-semibold text-slate-800">Your Emotions — </span>
+                      {summary.moon}
+                    </p>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="text-lg mt-0.5">☀️</span>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      <span className="font-semibold text-slate-800">Your Identity — </span>
+                      {summary.sun}
+                    </p>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="text-lg mt-0.5">⭐</span>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      <span className="font-semibold text-slate-800">Your Superpower — </span>
+                      {summary.standout}
+                    </p>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="text-lg mt-0.5">🔮</span>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      <span className="font-semibold text-slate-800">Right Now — </span>
+                      {summary.dasha}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      )}
+
+      {/* ── Ask AI Banner ── */}
+      {chart && !summaryLoading && (
+        <section className="px-6 pb-2">
+          <button
+            onClick={() => router.push(`/consult?name=${encodeURIComponent(chartName)}`)}
+            className="w-full rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
+            style={{
+              background: "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(214,136,10,0.08) 100%)",
+              border: "1px solid rgba(214,136,10,0.15)",
+            }}
+          >
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <SparkleIcon size={20} weight="fill" className="text-primary" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold text-slate-800">Ask the AI about your chart</p>
+              <p className="text-[11px] text-slate-400">Get a personal reading in plain English</p>
+            </div>
+            <span className="text-primary text-lg">→</span>
+          </button>
+        </section>
+      )}
 
       {/* ── Hero Card Carousel ── */}
       <section className="px-6 py-4">
