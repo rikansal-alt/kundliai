@@ -124,7 +124,15 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Validate input ──────────────────────────────────────────────────
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid request body" }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
     const parsed = MessagesArraySchema.safeParse(body.messages);
     if (!parsed.success) {
       return new Response(

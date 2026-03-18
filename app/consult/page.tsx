@@ -144,13 +144,21 @@ function ConsultContent() {
         guestHeaders["x-guest-consult-count"] = String(guestSession.consultCount);
       }
 
+      // Safely build chart data — strip any non-serializable values
+      let safeChart = {};
+      try {
+        safeChart = JSON.parse(JSON.stringify(chartDataRef.current ?? {}));
+      } catch {
+        safeChart = {};
+      }
+
       const res = await fetch("/api/consult", {
         method: "POST",
         headers: guestHeaders,
         body: JSON.stringify({
           messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.text })),
-          chart: chartDataRef.current ?? {},
-          userName: name,
+          chart: safeChart,
+          userName: name || "Friend",
         }),
       });
 
