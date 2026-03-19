@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { SunIcon, SparkleIcon, PaperPlaneTiltIcon, PlusCircleIcon, UserIcon } from "@phosphor-icons/react";
+import { SparkleIcon, PaperPlaneTiltIcon, PlusCircleIcon, UserIcon } from "@phosphor-icons/react";
 import SoftLoginPrompt from "@/components/SoftLoginPrompt";
 import { getGuestSession } from "@/lib/guestSession";
 
@@ -77,13 +77,25 @@ function ConsultContent() {
   const isGuestRef = useRef<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Detect guest mode on mount
+  // Detect guest mode on mount + fetch current count from server
   useEffect(() => {
+    if (status === "loading") return;
     const guest = getGuestSession();
-    // Guest = has guest session OR not authenticated
     isGuestRef.current = !!guest || status !== "authenticated";
-    setConsultLimit(status === "authenticated" ? 15 : 5);
+    const limit = status === "authenticated" ? 15 : 5;
+    setConsultLimit(limit);
     setShowCounter(true);
+
+    // Fetch current usage from server to show accurate counter
+    fetch("/api/consult/remaining")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.used === "number") {
+          setConsultsUsed(data.used);
+          if (data.used >= limit) setConsultLimitReached(true);
+        }
+      })
+      .catch(() => {});
   }, [status]);
 
   useEffect(() => {
@@ -251,9 +263,8 @@ function ConsultContent() {
       >
         <div className="flex items-center p-4 pb-2 justify-between">
           <button onClick={() => router.back()} className="flex size-12 shrink-0 items-center">
-            <div className="bg-primary/10 flex items-center justify-center rounded-full size-10 border border-primary/20">
-              <SunIcon className="text-primary w-6 h-6" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="KundliAI" className="w-10 h-10 rounded-full object-cover border border-primary/20" />
           </button>
           <div className="flex-1 text-center">
             <h2 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">AI Consultation</h2>
@@ -281,9 +292,8 @@ function ConsultContent() {
         {messages.map((msg) => (
           <div key={msg.id} className={`flex items-start gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
             {msg.role === "assistant" && (
-              <div className="bg-white shadow-sm border border-slate-100 rounded-full w-10 h-10 shrink-0 flex items-center justify-center">
-                <SunIcon className="text-primary w-5 h-5" />
-              </div>
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src="/logo.png" alt="Jyotish" className="w-10 h-10 rounded-full object-cover shrink-0 shadow-sm border border-slate-100" />
             )}
             <div className={`flex flex-1 flex-col gap-1.5 ${msg.role === "user" ? "items-end" : "items-start"}`}>
               <p className={`${msg.role === "user" ? "text-slate-500" : "text-primary"} text-[13px] font-semibold flex items-center gap-1`}>
@@ -321,9 +331,8 @@ function ConsultContent() {
         ))}
         {isLoading && (
           <div className="flex items-start gap-3">
-            <div className="bg-white shadow-sm border border-slate-100 rounded-full w-10 h-10 shrink-0 flex items-center justify-center">
-              <SunIcon className="text-primary w-5 h-5 animate-spin" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Jyotish" className="w-10 h-10 rounded-full object-cover shrink-0 shadow-sm border border-slate-100 animate-pulse" />
             <div className="flex flex-1 flex-col gap-1.5 items-start">
               <p className="text-primary text-[13px] font-semibold flex items-center gap-1">
                 <SparkleIcon className="w-3 h-3" /> Jyotish

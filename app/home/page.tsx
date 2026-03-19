@@ -238,9 +238,8 @@ function HomeContent() {
                 style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(214,136,10,0.3)", flexShrink: 0 }}
               />
             ) : (
-              <div style={{ width: 44, height: 44, borderRadius: "50%", border: "2px solid rgba(214,136,10,0.2)", background: "rgba(214,136,10,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span className="text-primary font-bold text-sm">{firstName[0]?.toUpperCase()}</span>
-              </div>
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src="/logo.png" alt="KundliAI" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(214,136,10,0.2)", flexShrink: 0 }} />
             )}
             <div className="flex flex-col items-start">
               <span className="text-primary font-bold tracking-widest text-xs uppercase">Namaste</span>

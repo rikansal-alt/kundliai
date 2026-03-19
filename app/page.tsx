@@ -402,15 +402,9 @@ export default function LandingPage() {
       )}
 
       {/* Logo */}
-      <div className="mb-8 relative flex items-center justify-center">
-        {/* Outer glow ring */}
-        <div className="absolute w-24 h-24 rounded-full" style={{ background: "radial-gradient(circle, rgba(214,136,10,0.15) 0%, transparent 70%)" }} />
-        {/* Middle ring */}
-        <div className="absolute w-16 h-16 rounded-full border border-primary/20" />
-        {/* Inner icon */}
-        <div className="relative w-14 h-14 rounded-full flex items-center justify-center border border-primary/30" style={{ background: "linear-gradient(135deg, rgba(214,136,10,0.12), rgba(245,194,0,0.18))" }}>
-          <SunIcon className="text-primary w-7 h-7" weight="thin" />
-        </div>
+      <div className="mb-6 flex justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="KundliAI" className="w-20 h-20 object-contain" />
       </div>
 
       {/* Header */}
