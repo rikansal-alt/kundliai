@@ -94,31 +94,60 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Danger zone — only for logged-in users */}
-        {session?.user && (
-          <section>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-1">Account Actions</p>
-            <div className="bg-slate-50 rounded-2xl overflow-hidden">
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 transition-colors border-b border-slate-100"
-              >
-                <SignOutIcon className="w-4 h-4 text-red-500" weight="thin" />
-                <span className="text-red-500 text-sm font-medium">Sign Out</span>
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 transition-colors"
-              >
-                <TrashIcon className="w-4 h-4 text-red-400" weight="thin" />
-                <div className="text-left">
-                  <p className="text-red-400 text-sm font-medium">Delete Account</p>
-                  <p className="text-slate-400 text-[11px]">Permanently remove your data — 45 day processing time</p>
-                </div>
-              </button>
-            </div>
-          </section>
-        )}
+        {/* Data & Account Actions */}
+        <section>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-1">
+            {session?.user ? "Account Actions" : "Data"}
+          </p>
+          <div className="bg-slate-50 rounded-2xl overflow-hidden">
+            {/* Clear chart — always visible */}
+            <button
+              onClick={() => {
+                if (!confirm("This will delete your chart and all local data. Continue?")) return;
+                try {
+                  localStorage.removeItem("kundliai_chart");
+                  localStorage.removeItem("kundliai_guest");
+                  localStorage.removeItem("kundliai_summary");
+                  localStorage.removeItem("kundliai_compatibility");
+                  // Clear any daily caches
+                  Object.keys(localStorage).forEach((k) => {
+                    if (k.startsWith("kundliai_daily_")) localStorage.removeItem(k);
+                  });
+                } catch { /* ignore */ }
+                router.push("/");
+              }}
+              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 transition-colors border-b border-slate-100"
+            >
+              <TrashIcon className="w-4 h-4 text-red-400" weight="thin" />
+              <div className="text-left">
+                <p className="text-red-400 text-sm font-medium">Clear My Chart</p>
+                <p className="text-slate-400 text-[11px]">Remove chart data from this device</p>
+              </div>
+            </button>
+            {/* Sign Out & Delete — logged-in only */}
+            {session?.user && (
+              <>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 transition-colors border-b border-slate-100"
+                >
+                  <SignOutIcon className="w-4 h-4 text-red-500" weight="thin" />
+                  <span className="text-red-500 text-sm font-medium">Sign Out</span>
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 transition-colors"
+                >
+                  <TrashIcon className="w-4 h-4 text-red-400" weight="thin" />
+                  <div className="text-left">
+                    <p className="text-red-400 text-sm font-medium">Delete Account</p>
+                    <p className="text-slate-400 text-[11px]">Permanently remove your data</p>
+                  </div>
+                </button>
+              </>
+            )}
+          </div>
+        </section>
 
         {/* Follow Us */}
         <section>

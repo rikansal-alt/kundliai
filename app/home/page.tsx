@@ -273,7 +273,7 @@ function HomeContent() {
 
         <div className="mb-4">
           <h1 className="fraunces-italic text-5xl font-normal text-slate-900">
-            {headingName} <span className="text-3xl not-italic">☀️</span>
+            {headingName}
           </h1>
           {/* suppressHydrationWarning: content depends on localStorage (client-only) */}
           <p className="text-primary font-medium text-sm mt-1" suppressHydrationWarning>
