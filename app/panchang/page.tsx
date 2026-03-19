@@ -29,11 +29,18 @@ function padaStr(n: number) { return `${n}${PADA_SUFFIX[n-1] ?? "th"} Pada`; }
 /** Convert UTC-minutes-from-midnight to a time string.
  *  Pass a timezone to format in that zone; omit to use the browser's local timezone. */
 function utcMinToLocal(utcMin: number, timezone?: string): string {
+  // Convert UTC minutes-from-midnight to a time string in the given timezone
+  // Handle negative values (before midnight UTC) and values > 1440 (next day)
+  const normalized = ((utcMin % 1440) + 1440) % 1440;
+  const hours = Math.floor(normalized / 60);
+  const mins = Math.round(normalized % 60);
   const now = new Date();
-  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, utcMin, 0));
+  // Create a date at this UTC time today
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hours, mins, 0));
+  const tz = timezone || "Asia/Kolkata"; // Always use location timezone, never browser
   return d.toLocaleTimeString("en-US", {
     hour: "numeric", minute: "2-digit", hour12: true,
-    ...(timezone ? { timeZone: timezone } : {}),
+    timeZone: tz,
   });
 }
 
