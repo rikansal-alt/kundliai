@@ -20,7 +20,7 @@ interface DashaSnapshot {
 
 interface ChartSnap {
   name: string;
-  ascendant: string;
+  ascendant: string | { sign: string; degree?: number; nakshatra?: string };
   moonSign: string;
   sunSign: string;
   mahadasha: {
@@ -112,8 +112,9 @@ function HomeContent() {
       const cached = localStorage.getItem("kundliai_summary");
       if (cached) {
         const parsed = JSON.parse(cached);
-        // Cache valid for same chart (check ascendant + moonSign)
-        if (parsed.ascendant === chart.ascendant && parsed.moonSign === chart.moonSign) {
+        // Cache valid for same chart (check ascendant sign + moonSign)
+        const ascSign = typeof chart.ascendant === "object" ? chart.ascendant.sign : chart.ascendant;
+        if (parsed.ascendant === ascSign && parsed.moonSign === chart.moonSign) {
           setSummary(parsed.summary);
           summaryFetchedRef.current = true;
           return;
@@ -142,8 +143,9 @@ function HomeContent() {
           setSummary(data.summary);
           // Cache it
           try {
+            const cachedAsc = typeof chart.ascendant === "object" ? chart.ascendant.sign : chart.ascendant;
             localStorage.setItem("kundliai_summary", JSON.stringify({
-              ascendant: chart.ascendant,
+              ascendant: cachedAsc,
               moonSign: chart.moonSign,
               summary: data.summary,
             }));
@@ -234,12 +236,20 @@ function HomeContent() {
               My Charts
             </button>
           ) : (
-            <button
-              onClick={() => router.push("/?new=1")}
-              className="flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/8 border border-primary/20 px-3 py-1.5 rounded-full hover:bg-primary/15 transition-colors"
-            >
-              + New Chart
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => router.push("/?new=1&edit=1")}
+                className="text-xs font-semibold text-slate-500 border border-slate-200 px-3 py-1.5 rounded-full hover:bg-slate-50 transition-colors"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => router.push("/?new=1")}
+                className="text-xs font-semibold text-primary bg-primary/8 border border-primary/20 px-3 py-1.5 rounded-full hover:bg-primary/15 transition-colors"
+              >
+                + New
+              </button>
+            </div>
           )}
         </div>
 
@@ -252,7 +262,7 @@ function HomeContent() {
             {!isLoaded
               ? "\u00a0"
               : chart
-              ? `${chart.ascendant} Asc · ${chart.moonSign} Moon`
+              ? `${typeof chart.ascendant === "object" ? (chart.ascendant as { sign?: string }).sign : chart.ascendant} Asc · ${chart.moonSign} Moon`
               : "Enter birth details to see your chart"}
           </p>
         </div>
@@ -303,41 +313,24 @@ function HomeContent() {
                 </p>
 
                 <div className="space-y-3">
-                  <div className="flex gap-3 items-start">
-                    <span className="text-lg mt-0.5">🌅</span>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      <span className="font-semibold text-slate-800">Rising Sign — </span>
-                      {summary.ascendant}
-                    </p>
-                  </div>
-                  <div className="flex gap-3 items-start">
-                    <span className="text-lg mt-0.5">🌙</span>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      <span className="font-semibold text-slate-800">Your Emotions — </span>
-                      {summary.moon}
-                    </p>
-                  </div>
-                  <div className="flex gap-3 items-start">
-                    <span className="text-lg mt-0.5">☀️</span>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      <span className="font-semibold text-slate-800">Your Identity — </span>
-                      {summary.sun}
-                    </p>
-                  </div>
-                  <div className="flex gap-3 items-start">
-                    <span className="text-lg mt-0.5">⭐</span>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      <span className="font-semibold text-slate-800">Your Superpower — </span>
-                      {summary.standout}
-                    </p>
-                  </div>
-                  <div className="flex gap-3 items-start">
-                    <span className="text-lg mt-0.5">🔮</span>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      <span className="font-semibold text-slate-800">Right Now — </span>
-                      {summary.dasha}
-                    </p>
-                  </div>
+                  {[
+                    { icon: SunIcon,       label: "Rising Sign", text: summary.ascendant },
+                    { icon: MoonIcon,      label: "Your Emotions", text: summary.moon },
+                    { icon: SparkleIcon,   label: "Your Identity", text: summary.sun },
+                    { icon: PlanetIcon,    label: "Your Superpower", text: summary.standout },
+                    { icon: BinocularsIcon, label: "Right Now", text: summary.dasha },
+                  ].map(({ icon: Icon, label, text }) => (
+                    <div key={label} className="flex gap-3 items-start">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ background: "rgba(214,136,10,0.08)" }}>
+                        <Icon size={15} weight="thin" className="text-primary" />
+                      </div>
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        <span className="font-semibold text-slate-800">{label} — </span>
+                        {text}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : null}
@@ -424,7 +417,7 @@ function HomeContent() {
                 </div>
                 <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
                   &ldquo;{chart?.ascendant
-                    ? `Your ${chart.ascendant} ascendant draws in reflective evening energy — let creativity flow and cherish beauty.`
+                    ? `Your ${typeof chart.ascendant === "object" ? (chart.ascendant as { sign?: string }).sign : chart.ascendant} ascendant draws in reflective evening energy — let creativity flow and cherish beauty.`
                     : "Venus graces your evening — let creativity flow and cherish moments of beauty and connection."}&rdquo;
                 </blockquote>
                 <div className="flex gap-2">

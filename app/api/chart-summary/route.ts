@@ -49,20 +49,28 @@ Birth chart for ${firstName}:
 ${planetLines.length > 0 ? "\nPlanetary positions:\n" + planetLines.join("\n") : ""}
 ${dashaLine ? "\n" + dashaLine : ""}
 
-Write a warm, personal summary in EXACTLY this JSON format:
+STRICT STYLE RULES:
+- NEVER use em dashes (—). Use commas or periods instead.
+- NEVER use semicolons.
+- Keep sentences short and punchy. Max 20 words per sentence.
+- Write like a friend texting, not like an essay.
+- No filler words like "essentially", "naturally", "truly", "deeply", "profoundly".
+- Sound human. Not poetic. Not flowery.
+
+Write a personal summary in EXACTLY this JSON format:
 {
-  "greeting": "A one-line warm greeting addressing ${firstName}",
-  "ascendant": "One sentence explaining what ${asc} rising means for how the world sees them and their general approach to life. Simple language.",
-  "moon": "One sentence about what ${moonSign} Moon means for their emotions and inner world. Relatable.",
-  "sun": "One sentence about what ${sunSign} Sun means for their core identity and life purpose.",
-  "standout": "The most interesting/powerful placement in their chart. Name the planet and sign, then explain in one sentence why it matters for their life. Make it feel special.",
-  "standoutPlanet": "Just the planet name of the standout placement",
-  "standoutSign": "Just the sign of the standout placement",
-  "dasha": "One sentence about their current life phase based on the Mahadasha. If no dasha info, say something about the general energy of their chart right now.",
-  "oneWord": "One word that captures the essence of this chart (like: Visionary, Nurturer, Warrior, Seeker, etc.)"
+  "greeting": "Short warm greeting for ${firstName}, max 10 words",
+  "ascendant": "What ${asc} rising means in plain English. One short sentence. How people see them.",
+  "moon": "What ${moonSign} Moon means for emotions. One short sentence. Relatable.",
+  "sun": "What ${sunSign} Sun means for identity. One short sentence.",
+  "standout": "Most powerful placement. Name the planet and sign, then one sentence on why it matters. Keep it concrete.",
+  "standoutPlanet": "Just the planet name",
+  "standoutSign": "Just the sign name",
+  "dasha": "One sentence about their current life phase. Practical, not poetic.",
+  "oneWord": "One word for this chart (like: Builder, Healer, Leader, Explorer)"
 }
 
-Return ONLY valid JSON. No markdown. No explanation.`;
+Return ONLY valid JSON. No markdown.`;
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-6",

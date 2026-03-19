@@ -23,6 +23,60 @@ export default function LandingPage() {
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  // Pre-fill form in edit mode from all available sources
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("edit") === "1") {
+      try {
+        // Source 1: guest session
+        const guestRaw = localStorage.getItem("kundliai_guest");
+        if (guestRaw) {
+          const guest = JSON.parse(guestRaw);
+          if (guest?.birthDetails?.name) {
+            setForm({
+              name: guest.birthDetails.name,
+              dob: guest.birthDetails.date || "",
+              time: guest.birthDetails.time || "",
+              city: guest.birthDetails.city || "",
+            });
+            if (guest.birthDetails.lat && guest.birthDetails.lng) {
+              setCoords({ lat: guest.birthDetails.lat, lng: guest.birthDetails.lng });
+            }
+            return;
+          }
+        }
+
+        // Source 2: kundliai_chart with meta.birthDetails
+        const chartRaw = localStorage.getItem("kundliai_chart");
+        if (chartRaw) {
+          const snap = JSON.parse(chartRaw);
+          const bd = snap.meta?.birthDetails;
+          if (bd) {
+            setForm({
+              name: snap.name || bd.name || "",
+              dob: bd.date || "",
+              time: bd.time || "",
+              city: bd.city || "",
+            });
+            if (bd.lat && bd.lng) {
+              setCoords({ lat: bd.lat, lng: bd.lng });
+            }
+          } else if (snap.name) {
+            // Minimal fallback — at least pre-fill the name
+            setForm((prev) => ({ ...prev, name: snap.name }));
+          }
+        }
+      } catch { /* ignore */ }
+      return;
+    }
+
+    // Non-edit mode: pre-fill name from Google session
+    if (status === "authenticated" && session?.user?.name) {
+      setForm((prev) => prev.name ? prev : { ...prev, name: session.user?.name ?? "" });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
   // Educational loading step timer
   useEffect(() => {
     if (!saving) { setLoadingStep(0); return; }
