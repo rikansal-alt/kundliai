@@ -97,33 +97,10 @@ function buildChartSummary(chart: ChartData): string {
 
 export async function POST(req: NextRequest) {
   try {
-    // ── Rate limit by IP ────────────────────────────────────────────────
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const guestId = req.headers.get("x-guest-id");
 
-    const rateLimitKey = guestId
-      ? `consult:guest:${guestId}`
-      : `consult:ip:${ip}`;
-
-    const limit = await checkRateLimit({
-      key: rateLimitKey,
-      limit: guestId ? 3 : 15,
-      windowSeconds: guestId ? 86400 * 365 : 86400 * 30, // guest: lifetime, registered: per month
-    });
-
-    if (!limit.allowed) {
-      return new Response(
-        JSON.stringify({
-          error: "limit_reached",
-          message: guestId
-            ? "Free consultations used. Sign in for more."
-            : "Consultation limit reached. Try again later.",
-        }),
-        { status: 429, headers: { "Content-Type": "application/json", "Retry-After": String(limit.retryAfter) } },
-      );
-    }
-
-    // ── Validate input ──────────────────────────────────────────────────
+    // ── Validate input FIRST (don't burn rate limit credits on bad requests) ──
     let body;
     try {
       body = await req.json();
@@ -160,6 +137,29 @@ export async function POST(req: NextRequest) {
           headers: { "Content-Type": "text/plain; charset=utf-8" },
         });
       }
+    }
+
+    // ── Rate limit AFTER validation (only count valid requests) ─────────
+    const rateLimitKey = guestId
+      ? `consult:guest:${guestId}`
+      : `consult:ip:${ip}`;
+
+    const limit = await checkRateLimit({
+      key: rateLimitKey,
+      limit: guestId ? 3 : 15,
+      windowSeconds: guestId ? 86400 * 365 : 86400 * 30,
+    });
+
+    if (!limit.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: "limit_reached",
+          message: guestId
+            ? "Free consultations used. Sign in for more."
+            : "Consultation limit reached. Try again later.",
+        }),
+        { status: 429, headers: { "Content-Type": "application/json", "Retry-After": String(limit.retryAfter) } },
+      );
     }
 
     const { chart, userName } = body;

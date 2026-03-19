@@ -205,7 +205,7 @@ export default function PanchangPage() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Sunrise</p>
-                  <p className="font-bold text-slate-800 text-sm">{utcMinToLocal(data.sunriseUtcMin)}</p>
+                  <p className="font-bold text-slate-800 text-sm">{utcMinToLocal(data.sunriseUtcMin, data.locationTimezone)}</p>
                 </div>
               </div>
               <div className="rounded-xl p-3 flex items-center gap-3 border" style={{ background: "rgba(214,136,10,0.06)", borderColor: "rgba(214,136,10,0.2)" }}>
@@ -214,7 +214,7 @@ export default function PanchangPage() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Sunset</p>
-                  <p className="font-bold text-slate-800 text-sm">{utcMinToLocal(data.sunsetUtcMin)}</p>
+                  <p className="font-bold text-slate-800 text-sm">{utcMinToLocal(data.sunsetUtcMin, data.locationTimezone)}</p>
                 </div>
               </div>
             </div>
@@ -229,7 +229,7 @@ export default function PanchangPage() {
                 <span className="ml-auto text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Avoid</span>
               </div>
               <p className="text-2xl font-bold text-red-800">
-                {utcMinToLocal(data.rahuKaal.startUtcMin)} – {utcMinToLocal(data.rahuKaal.endUtcMin)}
+                {utcMinToLocal(data.rahuKaal.startUtcMin, data.locationTimezone)} – {utcMinToLocal(data.rahuKaal.endUtcMin, data.locationTimezone)}
               </p>
               <p className="text-xs text-red-500 mt-1">
                 Inauspicious period — avoid travel, signing contracts, new ventures
@@ -254,8 +254,8 @@ export default function PanchangPage() {
                     <p className="text-xs text-slate-500 truncate">{m.description}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-xs font-bold text-primary">{utcMinToLocal(m.startUtcMin)}</p>
-                    <p className="text-xs text-slate-400">to {utcMinToLocal(m.endUtcMin)}</p>
+                    <p className="text-xs font-bold text-primary">{utcMinToLocal(m.startUtcMin, data.locationTimezone)}</p>
+                    <p className="text-xs text-slate-400">to {utcMinToLocal(m.endUtcMin, data.locationTimezone)}</p>
                   </div>
                 </div>
               ))}
