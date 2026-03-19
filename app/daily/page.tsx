@@ -335,6 +335,9 @@ export default function DailyGuidancePage() {
   const [guidance, setGuidance] = useState<DailyGuidance | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [muhurats, setMuhurats] = useState<{ label: string; time: string }[]>([]);
+  const [transitPrediction, setTransitPrediction] = useState<{
+    prediction: string; morning: string; afternoon: string; evening: string;
+  } | null>(null);
 
   useEffect(() => {
     try {
@@ -357,6 +360,24 @@ export default function DailyGuidancePage() {
     } catch { /* ignore */ }
     setIsLoaded(true);
 
+    // Fetch transit-aware predictions
+    try {
+      const raw = localStorage.getItem("kundliai_chart");
+      if (raw) {
+        const snap = JSON.parse(raw);
+        const ascSign = typeof snap.ascendant === "object" ? snap.ascendant.sign : snap.ascendant;
+        const moonSign = snap.moonSign;
+        if (ascSign && moonSign) {
+          fetch(`/api/daily-prediction?asc=${encodeURIComponent(ascSign)}&moon=${encodeURIComponent(moonSign)}`)
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.prediction) setTransitPrediction(data.prediction);
+            })
+            .catch(() => {});
+        }
+      }
+    } catch { /* ignore */ }
+
     // Fetch real muhurat times from panchang API
     let lat = 28.6139, lng = 77.209; // Delhi default
     try {
@@ -371,26 +392,13 @@ export default function DailyGuidancePage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.muhurats) {
-          // Convert UTC minutes to local time strings
-          const tzOffset = data.locationTimezone
-            ? (() => {
-                const now = new Date();
-                const fmt = new Intl.DateTimeFormat("en-US", {
-                  timeZone: data.locationTimezone, hour: "2-digit", minute: "2-digit", hour12: true,
-                });
-                // Use the pre-formatted times from the API
-                return 0; // placeholder
-              })()
-            : 0;
-
           const toTimeStr = (utcMin: number) => {
-            // Derive offset from timezone
             const now = new Date();
-            const utcStr = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, utcMin).toLocaleTimeString("en-US", {
-              timeZone: data.locationTimezone || "Asia/Kolkata",
-              hour: "numeric", minute: "2-digit", hour12: true,
-            });
-            return utcStr;
+            return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, utcMin))
+              .toLocaleTimeString("en-US", {
+                timeZone: data.locationTimezone || "Asia/Kolkata",
+                hour: "numeric", minute: "2-digit", hour12: true,
+              });
           };
 
           const muhList: { label: string; time: string }[] = data.muhurats.map((m: { name: string; startUtcMin: number; endUtcMin: number }) => ({
@@ -398,7 +406,6 @@ export default function DailyGuidancePage() {
             time: `${toTimeStr(m.startUtcMin)} – ${toTimeStr(m.endUtcMin)}`,
           }));
 
-          void tzOffset; // suppress unused warning
           setMuhurats(muhList);
         }
       })
@@ -511,7 +518,7 @@ export default function DailyGuidancePage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm text-slate-800 mb-1">Morning Insight</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{guidance.morning}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{transitPrediction?.morning || guidance.morning}</p>
                 </div>
               </div>
             </div>
@@ -530,7 +537,7 @@ export default function DailyGuidancePage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm text-slate-800 mb-1">Afternoon Insight</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{guidance.afternoon}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{transitPrediction?.afternoon || guidance.afternoon}</p>
                 </div>
               </div>
             </div>
@@ -549,7 +556,7 @@ export default function DailyGuidancePage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm text-slate-800 mb-1">Evening Insight</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{guidance.evening}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{transitPrediction?.evening || guidance.evening}</p>
                 </div>
               </div>
             </div>
@@ -598,7 +605,8 @@ export default function DailyGuidancePage() {
 
               <div className="space-y-3">
                 {(muhurats.length > 0 ? muhurats : [
-                  { label: "Loading...", time: "—" },
+                  { label: "Brahma Muhurta", time: "Before sunrise" },
+                  { label: "Abhijit Muhurta", time: "Around midday" },
                 ]).map((row) => (
                   <div key={row.label} className="flex items-center justify-between">
                     <span className="text-xs text-slate-500">{row.label}</span>

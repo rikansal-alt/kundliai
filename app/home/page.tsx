@@ -62,6 +62,13 @@ function HomeContent() {
   const [showProfile,   setShowProfile]   = useState(false);
   const [summary, setSummary] = useState<ChartSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [dailyStats, setDailyStats] = useState<{
+    energy: { label: string; value: string };
+    focus: { label: string; value: string };
+    caution: { label: string; value: string };
+    prediction?: { prediction: string; morning: string; afternoon: string; evening: string };
+    moonTransitSign?: string;
+  } | null>(null);
   const migrationAttemptedRef = useRef(false);
   const summaryFetchedRef = useRef(false);
 
@@ -103,6 +110,18 @@ function HomeContent() {
       }
     });
   }, [status, session]);
+
+  // Fetch daily transit stats (lightweight, no LLM)
+  useEffect(() => {
+    if (!chart) return;
+    const ascSign = typeof chart.ascendant === "object" ? chart.ascendant.sign : chart.ascendant;
+    fetch(`/api/daily-prediction?asc=${encodeURIComponent(ascSign)}&moon=${encodeURIComponent(chart.moonSign)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.stats) setDailyStats({ ...data.stats, prediction: data.prediction, moonTransitSign: data.moonTransitSign });
+      })
+      .catch(() => {});
+  }, [chart]);
 
   // Fetch plain English summary when chart is available
   useEffect(() => {
@@ -381,15 +400,16 @@ function HomeContent() {
                   <SunIcon size={20} weight="thin" className="text-primary opacity-60" />
                 </div>
                 <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
-                  &ldquo;{chart?.moonSign
-                    ? `With your ${chart.moonSign} Moon, today's energy favours bold intentions and purposeful action.`
-                    : "Jupiter's influence strengthens your path today — a favourable time for new intentions and purposeful action."}&rdquo;
+                  &ldquo;{dailyStats?.prediction?.prediction
+                    || (chart?.moonSign
+                      ? `With your ${chart.moonSign} Moon, today's energy favours bold intentions and purposeful action.`
+                      : "The stars favour new intentions and purposeful action today.")}&rdquo;
                 </blockquote>
                 <div className="flex gap-2">
                   {[
-                    { label: "Energy",  value: "High"   },
-                    { label: "Focus",   value: "Sharp"  },
-                    { label: "Caution", value: "Speech" },
+                    dailyStats?.energy  || { label: "Energy",  value: "—" },
+                    dailyStats?.focus   || { label: "Focus",   value: "—" },
+                    dailyStats?.caution || { label: "Caution", value: "—" },
                   ].map((stat) => (
                     <div key={stat.label} className="backdrop-blur-sm px-3 py-2 rounded-xl flex flex-col items-center flex-1 border" style={{ background: "rgba(255,255,255,0.45)", borderColor: "rgba(255,255,255,0.6)" }}>
                       <span className="text-[9px] uppercase font-bold tracking-wide" style={{ color: "rgba(120,80,0,0.65)" }}>{stat.label}</span>
@@ -416,15 +436,14 @@ function HomeContent() {
                   <MoonIcon size={20} weight="thin" className="text-indigo-500 opacity-60" />
                 </div>
                 <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
-                  &ldquo;{chart?.ascendant
-                    ? `Your ${typeof chart.ascendant === "object" ? (chart.ascendant as { sign?: string }).sign : chart.ascendant} ascendant draws in reflective evening energy — let creativity flow and cherish beauty.`
-                    : "Venus graces your evening — let creativity flow and cherish moments of beauty and connection."}&rdquo;
+                  &ldquo;{dailyStats?.prediction?.evening
+                    || "Let creativity flow and cherish moments of beauty and connection this evening."}&rdquo;
                 </blockquote>
                 <div className="flex gap-2">
                   {[
-                    { label: "Mood",     value: "Calm"    },
-                    { label: "Connect",  value: "Strong"  },
-                    { label: "Reflect",  value: "Deep"    },
+                    { label: "Mood",     value: dailyStats ? (dailyStats.energy.value === "High" ? "Bright" : dailyStats.energy.value === "Low" ? "Quiet" : "Calm") : "—" },
+                    { label: "Connect",  value: dailyStats?.focus.value || "—" },
+                    { label: "Reflect",  value: dailyStats ? (dailyStats.caution.value === "None" ? "Light" : "Deep") : "—" },
                   ].map((stat) => (
                     <div key={stat.label} className="backdrop-blur-sm px-3 py-2 rounded-xl flex flex-col items-center flex-1 border" style={{ background: "rgba(255,255,255,0.45)", borderColor: "rgba(255,255,255,0.6)" }}>
                       <span className="text-[9px] uppercase font-bold tracking-wide" style={{ color: "rgba(80,60,120,0.65)" }}>{stat.label}</span>
@@ -451,15 +470,14 @@ function HomeContent() {
                   <SunIcon size={20} weight="thin" className="text-sky-500 opacity-60" />
                 </div>
                 <blockquote className="fraunces-italic text-[22px] mb-6 leading-snug text-slate-800">
-                  &ldquo;{chart?.sunSign
-                    ? `Your ${chart.sunSign} Sun illuminates tomorrow — expect clarity in communication and swift progress.`
-                    : "Mercury rises strong tomorrow — expect clarity in communication and swift progress on pending matters."}&rdquo;
+                  &ldquo;{dailyStats?.prediction?.morning
+                    || "Expect clarity in communication and swift progress on pending matters tomorrow."}&rdquo;
                 </blockquote>
                 <div className="flex gap-2">
                   {[
-                    { label: "Clarity",  value: "Peak"    },
-                    { label: "Action",   value: "Swift"   },
-                    { label: "Social",   value: "Active"  },
+                    { label: "Clarity",  value: dailyStats?.energy.value === "High" ? "Peak" : dailyStats?.energy.value || "—" },
+                    { label: "Action",   value: dailyStats?.focus.value || "—" },
+                    { label: "Social",   value: dailyStats?.caution.value === "None" ? "Open" : "Mindful" },
                   ].map((stat) => (
                     <div key={stat.label} className="backdrop-blur-sm px-3 py-2 rounded-xl flex flex-col items-center flex-1 border" style={{ background: "rgba(255,255,255,0.45)", borderColor: "rgba(255,255,255,0.6)" }}>
                       <span className="text-[9px] uppercase font-bold tracking-wide" style={{ color: "rgba(0,80,120,0.65)" }}>{stat.label}</span>

@@ -85,30 +85,19 @@ export default function TransitsPage() {
       }
     } catch { /* ignore */ }
 
-    // Fetch current planetary positions from panchang API
-    const lat = 28.6139, lng = 77.209; // Delhi default
+    // Use user's birth location for transit calculations, fallback to Delhi
+    let lat = 28.6139, lng = 77.209;
     try {
       const raw = localStorage.getItem("kundliai_chart");
       if (raw) {
         const snap = JSON.parse(raw);
-        if (snap.meta?.birthDetails?.lat) {
-          // Use user's location for transit calculations
-        }
+        const bd = snap.meta?.birthDetails;
+        if (bd?.lat && bd?.lng) { lat = bd.lat; lng = bd.lng; }
+        else if (snap.lat && snap.lng) { lat = snap.lat; lng = snap.lng; }
       }
     } catch { /* ignore */ }
 
-    // Get current transits from the generate API with current date
-    fetch(`/api/panchang?lat=${lat}&lng=${lng}`)
-      .then(() => {
-        // Panchang gives us sun/moon but not all planets
-        // Use the ephemeris via a lightweight transit endpoint
-        // For now, calculate from chart data — the planets in the user's birth chart
-        // show their NATAL positions, not current transits
-        // We need actual current positions — let's compute them
-      })
-      .catch(() => {});
-
-    // Generate current transit chart (today's date, Delhi coordinates)
+    // Generate current transit chart using user's location
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -116,9 +105,9 @@ export default function TransitsPage() {
         name: "Transit",
         date: new Date().toISOString().split("T")[0],
         time: new Date().toTimeString().slice(0, 5),
-        city: "New Delhi",
-        lat: 28.6139,
-        lng: 77.209,
+        city: "Transit",
+        lat,
+        lng,
       }),
     })
       .then((r) => r.json())

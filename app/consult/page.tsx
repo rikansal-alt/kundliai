@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SunIcon, DotsThreeVerticalIcon, SparkleIcon, PaperPlaneTiltIcon, PlusCircleIcon, UserIcon } from "@phosphor-icons/react";
+import { useSession } from "next-auth/react";
+import { SunIcon, SparkleIcon, PaperPlaneTiltIcon, PlusCircleIcon, UserIcon } from "@phosphor-icons/react";
 import SoftLoginPrompt from "@/components/SoftLoginPrompt";
 import { getGuestSession } from "@/lib/guestSession";
 
@@ -22,6 +23,7 @@ const SUGGESTIONS = [
 function ConsultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { status } = useSession();
   const name = searchParams.get("name") || "Friend";
   const userId = searchParams.get("userId") || "";
   const chartId = searchParams.get("chartId") || "";
@@ -260,11 +262,7 @@ function ConsultContent() {
               <p className="text-slate-500 text-xs font-medium">Online</p>
             </div>
           </div>
-          <div className="flex w-12 items-center justify-end">
-            <button className="flex items-center justify-center rounded-full h-10 w-10 hover:bg-slate-100 transition-colors">
-              <DotsThreeVerticalIcon className="text-slate-700 w-5 h-5" />
-            </button>
-          </div>
+          <div className="w-12" />
         </div>
       </header>
 
