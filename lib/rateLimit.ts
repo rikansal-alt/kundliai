@@ -17,10 +17,8 @@ export async function checkRateLimit({
   limit,
   windowSeconds,
 }: RateLimitConfig): Promise<RateLimitResult> {
-  // Skip rate limiting in development
-  if (process.env.NODE_ENV === "development") {
-    return { allowed: true, remaining: limit };
-  }
+  // In development, allow all but still track count for accurate UI
+  const isDev = process.env.NODE_ENV === "development";
 
   const collection = (await db()).collection("ratelimits");
 
@@ -43,7 +41,7 @@ export async function checkRateLimit({
   );
 
   const count = (record?.count as number) ?? 1;
-  const allowed = count <= limit;
+  const allowed = isDev ? true : count <= limit;
   const remaining = Math.max(0, limit - count);
   const recordResetAt = record?.resetAt as Date | undefined;
   const retryAfter =

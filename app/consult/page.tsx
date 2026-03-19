@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SunIcon, DotsThreeVerticalIcon, SparkleIcon, PaperPlaneTiltIcon, PlusCircleIcon, UserIcon } from "@phosphor-icons/react";
 import SoftLoginPrompt from "@/components/SoftLoginPrompt";
-import { getGuestSession, incrementConsultCount, hasReachedConsultLimit, FREE_CONSULT_LIMIT } from "@/lib/guestSession";
+import { getGuestSession } from "@/lib/guestSession";
 
 interface Message {
   id: string;
@@ -75,22 +75,13 @@ function ConsultContent() {
   const isGuestRef = useRef<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Detect guest mode on mount + load consult count
+  // Detect guest mode on mount
   useEffect(() => {
     const guest = getGuestSession();
     isGuestRef.current = !!guest;
-    if (guest) {
-      setConsultsUsed(guest.consultCount ?? 0);
-      setConsultLimit(FREE_CONSULT_LIMIT);
-      setShowCounter(true);
-      if (hasReachedConsultLimit()) {
-        setConsultLimitReached(true);
-      }
-    } else {
-      // Registered user — show counter (15/mo limit for free tier)
-      setConsultLimit(15);
-      setShowCounter(true);
-    }
+    // Server is the authority on consult count — don't read from localStorage
+    setConsultLimit(guest ? 5 : 15);
+    setShowCounter(true);
   }, []);
 
   useEffect(() => {
@@ -124,10 +115,9 @@ function ConsultContent() {
   const handleSend = async (text: string = input) => {
     if (!text.trim() || isLoading) return;
 
-    // Block guests who've hit the limit
-    if (isGuestRef.current && hasReachedConsultLimit()) {
-      setConsultLimitReached(true);
-      setShowLoginPrompt(true);
+    // Block if limit already reached (from server response)
+    if (consultLimitReached) {
+      if (isGuestRef.current) setShowLoginPrompt(true);
       return;
     }
 
@@ -167,7 +157,8 @@ function ConsultContent() {
 
       if (!res.ok) {
         if (res.status === 429) {
-          setConsultsUsed(consultLimit);
+          const errData = await res.json().catch(() => ({}));
+          setConsultsUsed(errData.limit ?? consultLimit);
           setConsultLimitReached(true);
           if (isGuestRef.current) {
             setTimeout(() => setShowLoginPrompt(true), 500);
@@ -175,6 +166,14 @@ function ConsultContent() {
           throw new Error("limit_reached");
         }
         throw new Error("API error");
+      }
+
+      // Read server-authoritative consult count from headers
+      const remaining = parseInt(res.headers.get("X-Consult-Remaining") ?? "", 10);
+      const serverLimit = parseInt(res.headers.get("X-Consult-Limit") ?? "", 10);
+      if (!isNaN(remaining) && !isNaN(serverLimit)) {
+        setConsultsUsed(serverLimit - remaining);
+        setConsultLimit(serverLimit);
       }
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -205,12 +204,10 @@ function ConsultContent() {
       const finalMessages = [...messages, userMsg, { ...aiMsg, text: aiText }];
       await saveConsultation(finalMessages);
 
-      // Track consult count and show prompt after limit
-      setConsultsUsed((prev) => prev + 1);
-      if (isGuestRef.current) {
-        incrementConsultCount();
-        if (hasReachedConsultLimit()) {
-          setConsultLimitReached(true);
+      // Check if limit reached based on server response
+      if (!isNaN(remaining) && remaining <= 0) {
+        setConsultLimitReached(true);
+        if (isGuestRef.current) {
           setTimeout(() => setShowLoginPrompt(true), 1200);
         }
       }
@@ -362,7 +359,7 @@ function ConsultContent() {
             className="w-full py-2.5 px-4 rounded-xl text-center text-sm font-semibold text-white"
             style={{ background: "linear-gradient(135deg, #d6880a 0%, #f5c200 100%)" }}
           >
-            You have used {FREE_CONSULT_LIMIT} free consultations · Sign in for more
+            You have used {consultLimit} free consultations · Sign in for more
           </button>
         )}
         {consultsUsed >= consultLimit && !isGuestRef.current && (

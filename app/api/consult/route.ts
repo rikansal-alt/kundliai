@@ -140,23 +140,25 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Rate limit AFTER validation (only count valid requests) ─────────
-    const rateLimitKey = guestId
-      ? `consult:guest:${guestId}`
-      : `consult:ip:${ip}`;
+    // Always use IP-based rate limiting — can't be reset by clearing localStorage
+    const rateLimitKey = `consult:ip:${ip}`;
+    const rateLimitMax = guestId ? 5 : 15; // guests: 5/month, registered: 15/month
 
     const limit = await checkRateLimit({
       key: rateLimitKey,
-      limit: guestId ? 3 : 15,
-      windowSeconds: guestId ? 86400 * 365 : 86400 * 30,
+      limit: rateLimitMax,
+      windowSeconds: 86400 * 30, // 30 days for everyone
     });
 
     if (!limit.allowed) {
       return new Response(
         JSON.stringify({
           error: "limit_reached",
+          remaining: 0,
+          limit: rateLimitMax,
           message: guestId
             ? "Free consultations used. Sign in for more."
-            : "Consultation limit reached. Try again later.",
+            : "Monthly limit reached. Unlimited plan coming soon.",
         }),
         { status: 429, headers: { "Content-Type": "application/json", "Retry-After": String(limit.retryAfter) } },
       );
@@ -249,6 +251,8 @@ NEVER:
         "Content-Type": "text/plain; charset=utf-8",
         "Transfer-Encoding": "chunked",
         "Cache-Control": "no-cache",
+        "X-Consult-Remaining": String(limit.remaining),
+        "X-Consult-Limit": String(rateLimitMax),
       },
     });
   } catch (err) {
