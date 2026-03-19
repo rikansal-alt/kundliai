@@ -78,11 +78,11 @@ function ConsultContent() {
   // Detect guest mode on mount
   useEffect(() => {
     const guest = getGuestSession();
-    isGuestRef.current = !!guest;
-    // Server is the authority on consult count — don't read from localStorage
-    setConsultLimit(guest ? 5 : 15);
+    // Guest = has guest session OR not authenticated
+    isGuestRef.current = !!guest || status !== "authenticated";
+    setConsultLimit(status === "authenticated" ? 15 : 5);
     setShowCounter(true);
-  }, []);
+  }, [status]);
 
   useEffect(() => {
     if (scrollRef.current) {

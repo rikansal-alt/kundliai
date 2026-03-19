@@ -141,8 +141,11 @@ export async function POST(req: NextRequest) {
 
     // ── Rate limit AFTER validation (only count valid requests) ─────────
     // Always use IP-based rate limiting — can't be reset by clearing localStorage
+    // Check auth: if no auth cookie present, treat as guest regardless of x-guest-id
+    const authCookie = req.cookies.get("next-auth.session-token") || req.cookies.get("__Secure-next-auth.session-token");
+    const isAuthenticated = !!authCookie;
     const rateLimitKey = `consult:ip:${ip}`;
-    const rateLimitMax = guestId ? 5 : 15; // guests: 5/month, registered: 15/month
+    const rateLimitMax = isAuthenticated ? 15 : 5; // authenticated: 15/month, everyone else: 5/month
 
     const limit = await checkRateLimit({
       key: rateLimitKey,
