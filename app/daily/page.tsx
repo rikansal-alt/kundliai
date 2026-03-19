@@ -504,66 +504,66 @@ export default function DailyGuidancePage() {
 
           {/* ── Time-of-day cards ── */}
           <section className="px-6 space-y-3">
-            {/* Morning */}
+            {/* Morning — warm gold */}
             <div
               className="rounded-2xl p-5 border"
-              style={{ background: "rgba(251,191,36,0.1)", borderColor: "rgba(251,191,36,0.2)" }}
+              style={{ background: "#FFF8E8", borderColor: "rgba(217,119,6,0.15)" }}
             >
               <div className="flex items-start gap-3">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: "rgba(251,191,36,0.2)" }}
+                  style={{ background: "rgba(217,119,6,0.12)" }}
                 >
                   <SunIcon size={22} weight="thin" style={{ color: "#d97706" }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm text-slate-800 mb-1">Morning Insight</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{transitPrediction?.morning || guidance.morning}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">{transitPrediction?.morning || guidance.morning}</p>
                 </div>
               </div>
             </div>
 
-            {/* Afternoon */}
+            {/* Afternoon — warm amber */}
             <div
               className="rounded-2xl p-5 border"
-              style={{ background: "rgba(245,194,0,0.1)", borderColor: "rgba(245,194,0,0.2)" }}
+              style={{ background: "#FFF3E0", borderColor: "rgba(245,158,11,0.15)" }}
             >
               <div className="flex items-start gap-3">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: "rgba(245,194,0,0.2)" }}
+                  style={{ background: "rgba(245,158,11,0.12)" }}
                 >
-                  <SunIcon size={22} weight="fill" style={{ color: "#ca8a04" }} />
+                  <SunIcon size={22} weight="fill" style={{ color: "#f59e0b" }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm text-slate-800 mb-1">Afternoon Insight</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{transitPrediction?.afternoon || guidance.afternoon}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">{transitPrediction?.afternoon || guidance.afternoon}</p>
                 </div>
               </div>
             </div>
 
-            {/* Evening */}
+            {/* Evening — cool lavender */}
             <div
               className="rounded-2xl p-5 border"
-              style={{ background: "rgba(99,102,241,0.1)", borderColor: "rgba(99,102,241,0.2)" }}
+              style={{ background: "#F0EEF8", borderColor: "rgba(99,102,241,0.12)" }}
             >
               <div className="flex items-start gap-3">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: "rgba(99,102,241,0.2)" }}
+                  style={{ background: "rgba(99,102,241,0.12)" }}
                 >
                   <MoonIcon size={22} weight="thin" style={{ color: "#6366f1" }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-sm text-slate-800 mb-1">Evening Insight</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{transitPrediction?.evening || guidance.evening}</p>
+                  <h3 className="font-bold text-sm" style={{ color: "#3b3768" }}>Evening Insight</h3>
+                  <p className="text-xs leading-relaxed" style={{ color: "#5b577a" }}>{transitPrediction?.evening || guidance.evening}</p>
                 </div>
               </div>
             </div>
           </section>
 
           {/* ── Lucky section ── */}
-          <section className="px-6 pt-5 grid grid-cols-2 gap-3">
+          <section className="px-6 pt-5 space-y-3">
             {/* Lucky Color */}
             <div
               className="rounded-2xl p-5 border"

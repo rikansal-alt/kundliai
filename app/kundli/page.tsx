@@ -170,6 +170,11 @@ export default function KundliPage() {
   const [planets,      setPlanets]      = useState<ChartPlanet[]>([]);
   const [chartLoaded,  setChartLoaded]  = useState(false);
   const [ascNakshatra, setAscNakshatra] = useState("");
+  const [summary,      setSummary]      = useState<{
+    ascendant: string; moon: string; standout: string; dasha: string; oneWord: string;
+  } | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [chartName,    setChartName]    = useState("");
 
   // Load chart data from localStorage, fallback to guest session or API
   useEffect(() => {
@@ -234,6 +239,53 @@ export default function KundliPage() {
     } catch { /* ignore */ }
     setChartLoaded(true);
   }, []);
+
+  // Fetch plain English summary for the Kundli page
+  useEffect(() => {
+    if (planets.length === 0) return;
+    // Check cache
+    try {
+      const cached = localStorage.getItem("kundliai_summary");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const ascSign = SIGN_FULL[lagnaSign];
+        if (parsed.ascendant === ascSign && parsed.summary) {
+          setSummary(parsed.summary);
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+
+    setSummaryLoading(true);
+    let fullChart = {};
+    let name = "";
+    try {
+      const raw = localStorage.getItem("kundliai_chart");
+      if (raw) { fullChart = JSON.parse(raw); name = (fullChart as { name?: string }).name || ""; }
+    } catch { /* ignore */ }
+    setChartName(name);
+
+    fetch("/api/chart-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chart: fullChart, name }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.summary) {
+          setSummary(data.summary);
+          try {
+            localStorage.setItem("kundliai_summary", JSON.stringify({
+              ascendant: SIGN_FULL[lagnaSign],
+              moonSign: SIGN_FULL[planets.find(p => p.name === "Moon")?.sign || "Ar"],
+              summary: data.summary,
+            }));
+          } catch { /* ignore */ }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setSummaryLoading(false));
+  }, [planets, lagnaSign]);
 
   // Hydrate style preference
   useEffect(() => {
@@ -383,6 +435,61 @@ export default function KundliPage() {
           {activeTab === "Dasha" && dashaData ? ` · Vimshottari · ${dashaData.currentMahadasha.planet} active` : ""}
         </p>
       </div>
+
+      {/* ── Plain English Summary Card ── */}
+      {(summary || summaryLoading) && (
+        <div className="px-4 pb-3">
+          <div
+            className="rounded-2xl p-5 relative overflow-hidden"
+            style={{ background: "#fffcf5", borderLeft: "4px solid #d6880a", boxShadow: "0 1px 12px rgba(214,136,10,0.06)" }}
+          >
+            {summaryLoading ? (
+              <div className="space-y-3 animate-pulse">
+                <div className="h-4 bg-primary/10 rounded w-3/4" />
+                <div className="h-3 bg-primary/5 rounded w-full" />
+                <div className="h-3 bg-primary/5 rounded w-5/6" />
+                <div className="h-3 bg-primary/5 rounded w-2/3" />
+              </div>
+            ) : summary ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Your Chart in Plain English</p>
+                  {summary.oneWord && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                      style={{ color: "#d6880a", background: "rgba(214,136,10,0.08)", border: "1px solid rgba(214,136,10,0.15)" }}>
+                      {summary.oneWord}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2 text-[13px] text-slate-600 leading-relaxed">
+                  <p><span className="font-semibold text-slate-800">{SIGN_FULL[lagnaSign]} Rising</span> — {summary.ascendant}</p>
+                  <p><span className="font-semibold text-slate-800">Moon</span> — {summary.moon}</p>
+                  <p><span className="font-semibold text-slate-800">Superpower</span> — {summary.standout}</p>
+                  <p><span className="font-semibold text-slate-800">Right Now</span> — {summary.dasha}</p>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* ── USP Button — most important CTA ── */}
+      {planets.length > 0 && (
+        <div className="px-4 pb-3">
+          <button
+            onClick={() => router.push("/consult")}
+            className="w-full py-4 rounded-[14px] text-white font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.97] transition-transform"
+            style={{
+              background: "linear-gradient(135deg, #d6880a 0%, #f5c200 100%)",
+              boxShadow: "0 4px 20px rgba(214,136,10,0.35), inset 0 1px 0 rgba(255,255,255,0.2)",
+              height: 56,
+            }}
+          >
+            <SparkleIcon size={18} weight="fill" />
+            Ask Jyotish to explain my chart →
+          </button>
+        </div>
+      )}
 
       {/* ── Chart ── */}
       <div className="px-4 pb-2">

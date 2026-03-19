@@ -250,6 +250,26 @@ function ConsultContent() {
       className="relative flex flex-col bg-white overflow-hidden page-enter"
       style={{ height: "100dvh" }}
     >
+      {/* Subtle mandala watermark */}
+      <svg
+        className="absolute pointer-events-none"
+        style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)", opacity: 0.03, width: 300, height: 300 }}
+        viewBox="0 0 100 100"
+        fill="none"
+      >
+        <circle cx="50" cy="50" r="48" stroke="#d6880a" strokeWidth="0.5" />
+        <circle cx="50" cy="50" r="38" stroke="#d6880a" strokeWidth="0.5" />
+        <circle cx="50" cy="50" r="28" stroke="#d6880a" strokeWidth="0.5" />
+        <circle cx="50" cy="50" r="18" stroke="#d6880a" strokeWidth="0.5" />
+        <circle cx="50" cy="50" r="8" stroke="#d6880a" strokeWidth="0.5" />
+        {/* Petals */}
+        {Array.from({ length: 12 }).map((_, i) => (
+          <line key={i} x1="50" y1="2" x2="50" y2="98" stroke="#d6880a" strokeWidth="0.3" transform={`rotate(${i * 30} 50 50)`} />
+        ))}
+        {Array.from({ length: 12 }).map((_, i) => (
+          <ellipse key={`p${i}`} cx="50" cy="15" rx="8" ry="15" stroke="#d6880a" strokeWidth="0.3" fill="none" transform={`rotate(${i * 30} 50 50)`} />
+        ))}
+      </svg>
       {showLoginPrompt && (
         <SoftLoginPrompt
           trigger="consult_limit"
@@ -375,16 +395,20 @@ function ConsultContent() {
           </div>
         )}
         {/* Chips */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-          {SUGGESTIONS.map(({ label, query }) => (
-            <button
-              key={label}
-              onClick={() => handleSend(query)}
-              className="whitespace-nowrap px-4 py-2 rounded-full bg-white border border-primary/20 text-slate-700 text-sm font-medium hover:border-primary transition-colors shadow-sm"
-            >
-              {label}
-            </button>
-          ))}
+        <div className="relative">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 pr-8">
+            {SUGGESTIONS.map(({ label, query }) => (
+              <button
+                key={label}
+                onClick={() => handleSend(query)}
+                className="whitespace-nowrap px-4 py-2 rounded-full bg-white border border-primary/20 text-slate-700 text-sm font-medium hover:border-primary transition-colors shadow-sm"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* Fade gradient to signal scrollability */}
+          <div className="absolute right-0 top-0 bottom-2 w-12 pointer-events-none" style={{ background: "linear-gradient(to right, transparent, white)" }} />
         </div>
         {/* Input */}
         <div className="flex items-center gap-2 bg-white p-2 rounded-full shadow-lg border border-slate-100">
