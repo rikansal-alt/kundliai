@@ -60,7 +60,15 @@ function HomeContent() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [showProfile,   setShowProfile]   = useState(false);
-  const [summary, setSummary] = useState<ChartSummary | null>(null);
+  const [summary, setSummary] = useState<ChartSummary | null>(() => {
+    // Read cache synchronously to avoid loading flash on page revisits
+    if (typeof window === "undefined") return null;
+    try {
+      const cached = localStorage.getItem("kundliai_summary_v2");
+      if (cached) return JSON.parse(cached).summary || null;
+    } catch { /* ignore */ }
+    return null;
+  });
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [dailyStats, setDailyStats] = useState<{
     energy: { label: string; value: string };
