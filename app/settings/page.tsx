@@ -107,7 +107,7 @@ export default function SettingsPage() {
                 try {
                   localStorage.removeItem("kundliai_chart");
                   localStorage.removeItem("kundliai_guest");
-                  localStorage.removeItem("kundliai_summary");
+                  localStorage.removeItem("kundliai_summary_v2");
                   localStorage.removeItem("kundliai_compatibility");
                   // Clear any daily caches
                   Object.keys(localStorage).forEach((k) => {

@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
     const authCookie = req.cookies.get("next-auth.session-token") || req.cookies.get("__Secure-next-auth.session-token");
     const isAuthenticated = !!authCookie;
     const rateLimitKey = `consult:ip:${ip}`;
-    const rateLimitMax = isAuthenticated ? 15 : 5; // authenticated: 15/month, everyone else: 5/month
+    const rateLimitMax = isAuthenticated ? 25 : 10; // authenticated: 25/month, free: 10/month
 
     const limit = await checkRateLimit({
       key: rateLimitKey,

@@ -245,7 +245,7 @@ export default function KundliPage() {
     if (planets.length === 0) return;
     // Check cache
     try {
-      const cached = localStorage.getItem("kundliai_summary");
+      const cached = localStorage.getItem("kundliai_summary_v2");
       if (cached) {
         const parsed = JSON.parse(cached);
         const ascSign = SIGN_FULL[lagnaSign];
@@ -275,7 +275,7 @@ export default function KundliPage() {
         if (data.summary) {
           setSummary(data.summary);
           try {
-            localStorage.setItem("kundliai_summary", JSON.stringify({
+            localStorage.setItem("kundliai_summary_v2", JSON.stringify({
               ascendant: SIGN_FULL[lagnaSign],
               moonSign: SIGN_FULL[planets.find(p => p.name === "Moon")?.sign || "Ar"],
               summary: data.summary,

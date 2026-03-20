@@ -82,7 +82,7 @@ function ConsultContent() {
     if (status === "loading") return;
     const guest = getGuestSession();
     isGuestRef.current = !!guest || status !== "authenticated";
-    const limit = status === "authenticated" ? 15 : 5;
+    const limit = status === "authenticated" ? 25 : 10;
     setConsultLimit(limit);
     setShowCounter(true);
 

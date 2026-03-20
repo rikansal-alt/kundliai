@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       dashaLine = `Current Mahadasha: ${chart.mahadasha.currentMahadasha.planet} (until ${chart.mahadasha.currentMahadasha.endDate})`;
     }
 
-    const prompt = `You are a warm, friendly Vedic astrologer explaining a birth chart to someone who knows NOTHING about astrology. Use simple, everyday language. No jargon. No Sanskrit unless you immediately explain it.
+    const prompt = `You are explaining a birth chart to a 15-year-old who has never heard of astrology. Zero jargon. No astrology words without explaining them in the same breath. Talk like you're explaining to a friend over coffee.
 
 Birth chart for ${firstName}:
 - Ascendant (Rising Sign): ${asc}${ascNak ? ` in ${ascNak} nakshatra` : ""}
@@ -51,23 +51,25 @@ ${dashaLine ? "\n" + dashaLine : ""}
 
 STRICT STYLE RULES:
 - NEVER use em dashes (—). Use commas or periods instead.
-- NEVER use semicolons.
-- Keep sentences short and punchy. Max 20 words per sentence.
-- Write like a friend texting, not like an essay.
-- No filler words like "essentially", "naturally", "truly", "deeply", "profoundly".
-- Sound human. Not poetic. Not flowery.
+- NEVER use semicolons or colons.
+- Max 12 words per sentence. Shorter is better.
+- Write at a 6th grade reading level.
+- Use "you" and "your" a lot. Make it personal.
+- No words like: essence, cosmic, celestial, profound, innate, radiant, magnetic, luminous, embody, resonate, channel.
+- Use words like: people see you as, you're the kind of person who, you tend to, you're good at, you care about.
+- Sound like a cool older sibling, not a guru.
 
 Write a personal summary in EXACTLY this JSON format:
 {
-  "greeting": "Short warm greeting for ${firstName}, max 10 words",
-  "ascendant": "What ${asc} rising means in plain English. One short sentence. How people see them.",
-  "moon": "What ${moonSign} Moon means for emotions. One short sentence. Relatable.",
-  "sun": "What ${sunSign} Sun means for identity. One short sentence.",
-  "standout": "Most powerful placement. Name the planet and sign, then one sentence on why it matters. Keep it concrete.",
+  "greeting": "Hey ${firstName}! Super short warm greeting, max 8 words",
+  "ascendant": "How people see ${firstName} when they first meet. One sentence a teenager would understand. No astrology words.",
+  "moon": "How ${firstName} handles feelings and what makes them feel safe. One sentence. Relatable everyday language.",
+  "sun": "What ${firstName} is really about deep down. What drives them. One sentence.",
+  "standout": "The coolest thing in their chart. Say which planet and what it does for them in real life. One sentence. Like telling a friend 'dude, you have this amazing thing in your chart that means...'",
   "standoutPlanet": "Just the planet name",
   "standoutSign": "Just the sign name",
-  "dasha": "One sentence about their current life phase. Practical, not poetic.",
-  "oneWord": "One word for this chart (like: Builder, Healer, Leader, Explorer)"
+  "dasha": "What phase of life they're in right now and what it means day-to-day. One sentence. No astrology jargon.",
+  "oneWord": "One fun word for this person (like: Hustler, Dreamer, Protector, Creator, Boss)"
 }
 
 Return ONLY valid JSON. No markdown.`;

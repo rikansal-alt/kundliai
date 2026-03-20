@@ -128,7 +128,7 @@ function HomeContent() {
     if (!chart || summaryFetchedRef.current) return;
     // Check cache first
     try {
-      const cached = localStorage.getItem("kundliai_summary");
+      const cached = localStorage.getItem("kundliai_summary_v2");
       if (cached) {
         const parsed = JSON.parse(cached);
         // Cache valid for same chart (check ascendant sign + moonSign)
@@ -163,7 +163,7 @@ function HomeContent() {
           // Cache it
           try {
             const cachedAsc = typeof chart.ascendant === "object" ? chart.ascendant.sign : chart.ascendant;
-            localStorage.setItem("kundliai_summary", JSON.stringify({
+            localStorage.setItem("kundliai_summary_v2", JSON.stringify({
               ascendant: cachedAsc,
               moonSign: chart.moonSign,
               summary: data.summary,
@@ -332,11 +332,11 @@ function HomeContent() {
 
                 <div className="space-y-3">
                   {[
-                    { icon: SunIcon,       label: "Rising Sign", text: summary.ascendant },
-                    { icon: MoonIcon,      label: "Your Emotions", text: summary.moon },
-                    { icon: SparkleIcon,   label: "Your Identity", text: summary.sun },
+                    { icon: SunIcon,       label: "First Impressions", text: summary.ascendant },
+                    { icon: MoonIcon,      label: "Your Feelings", text: summary.moon },
+                    { icon: SparkleIcon,   label: "What Drives You", text: summary.sun },
                     { icon: PlanetIcon,    label: "Your Superpower", text: summary.standout },
-                    { icon: BinocularsIcon, label: "Right Now", text: summary.dasha },
+                    { icon: BinocularsIcon, label: "Life Right Now", text: summary.dasha },
                   ].map(({ icon: Icon, label, text }) => (
                     <div key={label} className="flex gap-3 items-start">
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"

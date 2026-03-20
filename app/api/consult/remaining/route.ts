@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const authCookie = req.cookies.get("next-auth.session-token") || req.cookies.get("__Secure-next-auth.session-token");
     const isAuthenticated = !!authCookie;
-    const limit = isAuthenticated ? 15 : 5;
+    const limit = isAuthenticated ? 25 : 10;
 
     // In development, return 0 used
     if (process.env.NODE_ENV === "development") {
