@@ -95,8 +95,16 @@ function buildChartSummary(chart: ChartData): string {
   const today = new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   lines.push("", `TODAY: ${today}`);
 
-  if (chart.meta?.birthDetails) {
-    lines.push(`Birth location: ${chart.meta.birthDetails.city}`);
+  // Birth details from meta or top-level fields
+  const bd = chart.meta?.birthDetails ?? (chart as Record<string, unknown>);
+  const birthDate = (bd as { date?: string }).date;
+  const birthTime = (bd as { time?: string }).time;
+  const birthCity = (bd as { city?: string }).city ?? (chart.meta?.birthDetails as { city?: string } | undefined)?.city;
+  if (birthDate || birthCity) {
+    lines.push("");
+    if (birthDate) lines.push(`Date of birth: ${birthDate}`);
+    if (birthTime) lines.push(`Time of birth: ${birthTime}`);
+    if (birthCity) lines.push(`Birth location: ${birthCity}`);
   }
 
   return lines.join("\n");
@@ -196,8 +204,8 @@ RESPONSE RULES — follow these exactly:
 7. For sensitive predictions add: "For spiritual guidance only."
 
 TOPIC BOUNDARIES:
-Only discuss Vedic astrology, birth charts, planets, nakshatras, dashas, transits, compatibility, muhurat, remedies, panchang, and spiritual guidance.
-For ANY other topic respond with ONLY: "I am here only to guide you through your Vedic birth chart. What would you like to know about your planetary positions or chart?"
+You may discuss: Vedic astrology, birth charts, planets, nakshatras, dashas, transits, compatibility, muhurat, remedies, panchang, spiritual guidance, AND any questions about the user's own birth details (date, time, place of birth) since you have that info in their chart data above.
+For clearly unrelated topics (coding, recipes, politics, sports) respond with ONLY: "I am here only to guide you through your Vedic birth chart. What would you like to know about your planetary positions or chart?"
 Do not explain why. Do not apologize. Just redirect.
 
 NEVER:

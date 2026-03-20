@@ -149,11 +149,24 @@ function ConsultContent() {
       }
 
       // Safely build chart data — strip any non-serializable values
-      let safeChart = {};
+      let safeChart: Record<string, unknown> = {};
       try {
         safeChart = JSON.parse(JSON.stringify(chartDataRef.current ?? {}));
       } catch {
         safeChart = {};
+      }
+
+      // Enrich with birth details if missing (from guest session or URL params)
+      if (!safeChart.meta) {
+        try {
+          const guestRaw = localStorage.getItem("kundliai_guest");
+          if (guestRaw) {
+            const guest = JSON.parse(guestRaw);
+            if (guest?.birthDetails) {
+              safeChart.meta = { birthDetails: guest.birthDetails };
+            }
+          }
+        } catch { /* ignore */ }
       }
 
       const res = await fetch("/api/consult", {
