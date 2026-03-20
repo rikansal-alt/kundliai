@@ -282,7 +282,7 @@ function ConsultContent() {
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex items-center p-4 pb-2 justify-between">
-          <button onClick={() => router.back()} className="flex size-12 shrink-0 items-center">
+          <button onClick={() => router.push("/home")} className="flex size-12 shrink-0 items-center justify-center" style={{ minHeight: 44, minWidth: 44 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="KundliAI" className="w-10 h-10 rounded-full object-cover border border-primary/20" />
           </button>
@@ -375,7 +375,7 @@ function ConsultContent() {
         style={{
           bottom: 0,
           width: "min(430px, 100vw)",
-          paddingBottom: "calc(env(safe-area-inset-bottom) + 72px)",
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)",
           zIndex: 20,
         }}
       >

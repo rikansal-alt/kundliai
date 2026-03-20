@@ -27,6 +27,72 @@ const CARD_W = 1080;
 const CARD_H = 1350;
 const PREVIEW_SCALE = 0.3;
 
+// ─── Daily rotating color themes ────────────────────────────────────────────
+
+interface CardTheme {
+  name: string;
+  bg: string;
+  text: string;
+  accent: string;
+  muted: string;
+  border: string;
+  divider: string;
+  cardBg: string;       // prediction card background
+  cardText: string;     // prediction card text
+  brandColor: string;
+  htmlBg: string;       // for html2canvas backgroundColor
+}
+
+const DAILY_THEMES: CardTheme[] = [
+  { // Ivory & Gold (classic)
+    name: "Ivory",
+    bg: "#FAF9F6", text: "#1A1A1A", accent: "#B5A28E", muted: "rgba(0,0,0,0.3)",
+    border: "#E5E4E2", divider: "#E5E4E2", cardBg: "#FAF9F6", cardText: "#1A1A1A",
+    brandColor: "#B5A28E", htmlBg: "#FAF9F6",
+  },
+  { // Deep Navy & Gold
+    name: "Navy",
+    bg: "radial-gradient(ellipse at 50% 20%, #1a1540 0%, #0a0820 100%)", text: "#F0EBD8", accent: "#D4AF37", muted: "rgba(240,235,216,0.35)",
+    border: "rgba(212,175,55,0.15)", divider: "rgba(212,175,55,0.15)", cardBg: "#fdf5e6", cardText: "#1a1a1a",
+    brandColor: "#D4AF37", htmlBg: "#0a0820",
+  },
+  { // Sage Green
+    name: "Sage",
+    bg: "#F2F5F0", text: "#2D3A2E", accent: "#6B8F71", muted: "rgba(45,58,46,0.35)",
+    border: "#D4DDD5", divider: "#D4DDD5", cardBg: "#F2F5F0", cardText: "#2D3A2E",
+    brandColor: "#6B8F71", htmlBg: "#F2F5F0",
+  },
+  { // Warm Terracotta
+    name: "Terracotta",
+    bg: "#FBF5F0", text: "#3B2318", accent: "#C4785C", muted: "rgba(59,35,24,0.35)",
+    border: "#E8D5C8", divider: "#E8D5C8", cardBg: "#FBF5F0", cardText: "#3B2318",
+    brandColor: "#C4785C", htmlBg: "#FBF5F0",
+  },
+  { // Dusty Rose
+    name: "Rose",
+    bg: "#FDF5F5", text: "#3B1F2B", accent: "#B76E79", muted: "rgba(59,31,43,0.35)",
+    border: "#E8CED3", divider: "#E8CED3", cardBg: "#FDF5F5", cardText: "#3B1F2B",
+    brandColor: "#B76E79", htmlBg: "#FDF5F5",
+  },
+  { // Midnight Purple
+    name: "Midnight",
+    bg: "radial-gradient(ellipse at 50% 30%, #1E1533 0%, #0D0A18 100%)", text: "#E8DFF0", accent: "#9B7FBF", muted: "rgba(232,223,240,0.35)",
+    border: "rgba(155,127,191,0.15)", divider: "rgba(155,127,191,0.15)", cardBg: "#F5F0FA", cardText: "#1E1533",
+    brandColor: "#9B7FBF", htmlBg: "#0D0A18",
+  },
+  { // Ocean Blue
+    name: "Ocean",
+    bg: "#F0F5FA", text: "#1A2A3A", accent: "#4A7C9B", muted: "rgba(26,42,58,0.35)",
+    border: "#C8D8E5", divider: "#C8D8E5", cardBg: "#F0F5FA", cardText: "#1A2A3A",
+    brandColor: "#4A7C9B", htmlBg: "#F0F5FA",
+  },
+];
+
+function getTodayTheme(): CardTheme {
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  return DAILY_THEMES[dayOfYear % DAILY_THEMES.length];
+}
+
 const HINDI_NAMES: Record<string, string> = {
   Aries: "\u092E\u0947\u0937", Taurus: "\u0935\u0943\u0937\u092D", Gemini: "\u092E\u093F\u0925\u0941\u0928",
   Cancer: "\u0915\u0930\u094D\u0915", Leo: "\u0938\u093F\u0902\u0939", Virgo: "\u0915\u0928\u094D\u092F\u093E",
@@ -42,6 +108,7 @@ export default function IgHoroscopePage() {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
+  const [theme, setTheme] = useState<CardTheme>(getTodayTheme);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const generate = async () => {
@@ -67,7 +134,7 @@ export default function IgHoroscopePage() {
     const dpr = window.devicePixelRatio || 1;
     const canvas = await html2canvas(el, {
       scale: 1 / dpr,
-      backgroundColor: "#FAF9F6",
+      backgroundColor: theme.htmlBg,
       useCORS: true,
       width: CARD_W,
       height: CARD_H,
@@ -138,8 +205,26 @@ export default function IgHoroscopePage() {
             </button>
           )}
         </div>
+        {/* Theme selector */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
+          {DAILY_THEMES.map((t) => (
+            <button
+              key={t.name}
+              onClick={() => setTheme(t)}
+              style={{
+                padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                border: theme.name === t.name ? "2px solid #1a1a1a" : "1px solid #ddd",
+                background: t.htmlBg, color: t.text === "#1A1A1A" ? "#333" : t.text,
+                cursor: "pointer",
+              }}
+            >
+              {t.name}
+            </button>
+          ))}
+        </div>
+
         {error && <p style={{ color: "#c0392b", marginTop: 12, fontSize: 14 }}>{error}</p>}
-        {data && <p style={{ color: "#999", fontSize: 12, marginTop: 12 }}>Generated for: {data.date}</p>}
+        {data && <p style={{ color: "#999", fontSize: 12, marginTop: 12 }}>Generated for: {data.date} · Theme: {theme.name}</p>}
       </div>
 
       {/* Loading */}
@@ -178,7 +263,7 @@ export default function IgHoroscopePage() {
                     overflow: "hidden", position: "relative",
                     transform: `scale(${PREVIEW_SCALE})`,
                     transformOrigin: "top left",
-                    backgroundColor: "#FAF9F6",
+                    background: theme.bg,
                     fontFamily: "'Fraunces', 'Cormorant Garamond', serif",
                     boxSizing: "border-box",
                     padding: "100px 80px",
@@ -192,27 +277,27 @@ export default function IgHoroscopePage() {
                   <div style={{
                     position: "absolute",
                     top: 40, left: 40, right: 40, bottom: 40,
-                    border: "1px solid #E5E4E2",
+                    border: `1px solid ${theme.border}`,
                     pointerEvents: "none",
                   }} />
 
                   {/* Header: Brand + Date */}
                   <div style={{
                     display: "flex", justifyContent: "space-between", alignItems: "center",
-                    borderBottom: "0.5px solid #E5E4E2",
+                    borderBottom: `0.5px solid ${theme.divider}`,
                     paddingBottom: 30, marginBottom: 50,
                     position: "relative", zIndex: 2,
                   }}>
                     <div style={{
                       fontFamily: "'Lexend', 'Montserrat', sans-serif",
                       letterSpacing: 15, fontSize: 20, fontWeight: 200,
-                      color: "#B5A28E",
+                      color: theme.brandColor,
                     }}>
                       KUNDLIAI
                     </div>
                     <div style={{
                       fontStyle: "italic", fontSize: 28,
-                      color: "#1A1A1A",
+                      color: theme.text,
                       fontFamily: "'Fraunces', 'Cormorant Garamond', serif",
                     }}>
                       {dateParts.formatted}
@@ -225,7 +310,7 @@ export default function IgHoroscopePage() {
                     top: "42%", left: 0, right: 0,
                     textAlign: "center",
                     fontSize: 220, fontWeight: 300,
-                    color: "rgba(0,0,0,0.04)",
+                    color: theme.bg.includes("gradient") ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
                     fontFamily: "'Fraunces', 'Cormorant Garamond', serif",
                     lineHeight: 1, pointerEvents: "none",
                     textTransform: "uppercase",
@@ -242,7 +327,7 @@ export default function IgHoroscopePage() {
                     <div style={{
                       fontSize: 22, letterSpacing: 8,
                       textTransform: "uppercase",
-                      color: "#B5A28E",
+                      color: theme.accent,
                       fontFamily: "'Lexend', 'Montserrat', sans-serif",
                       fontWeight: 200, marginBottom: 12,
                     }}>
@@ -250,14 +335,14 @@ export default function IgHoroscopePage() {
                     </div>
                     <div style={{
                       fontSize: 80, fontWeight: 600,
-                      color: "#1A1A1A",
+                      color: theme.text,
                       fontFamily: "'Fraunces', 'Cormorant Garamond', serif",
                       lineHeight: 1, marginBottom: 8,
                     }}>
                       {h.sign}
                     </div>
                     <div style={{
-                      fontSize: 26, color: "#B5A28E",
+                      fontSize: 26, color: theme.muted,
                       fontFamily: "'Lexend', sans-serif",
                       fontWeight: 200,
                     }}>
@@ -267,7 +352,7 @@ export default function IgHoroscopePage() {
 
                   {/* Divider */}
                   <div style={{
-                    width: 60, height: 1, background: "#B5A28E",
+                    width: 60, height: 1, background: theme.accent,
                     margin: "30px auto 40px",
                   }} />
 
@@ -275,11 +360,14 @@ export default function IgHoroscopePage() {
                   <div style={{
                     flex: 1, display: "flex", alignItems: "center",
                     position: "relative", zIndex: 2,
-                    padding: "0 20px",
+                    padding: theme.bg.includes("gradient") ? "40px 30px" : "0 20px",
+                    borderRadius: theme.bg.includes("gradient") ? 8 : 0,
+                    background: theme.bg.includes("gradient") ? theme.cardBg : "transparent",
+                    boxShadow: theme.bg.includes("gradient") ? "0 20px 50px rgba(0,0,0,0.3)" : "none",
                   }}>
                     <p style={{
                       fontSize: 38, lineHeight: 1.7,
-                      color: "#1A1A1A",
+                      color: theme.cardText,
                       fontFamily: "'Fraunces', 'Cormorant Garamond', serif",
                       fontWeight: 300, fontStyle: "italic",
                       margin: 0, textAlign: "center",
@@ -290,7 +378,7 @@ export default function IgHoroscopePage() {
 
                   {/* Footer */}
                   <div style={{
-                    borderTop: "0.5px solid #E5E4E2",
+                    borderTop: `0.5px solid ${theme.divider}`,
                     paddingTop: 30,
                     display: "flex", justifyContent: "space-between",
                     alignItems: "flex-end",
@@ -299,7 +387,7 @@ export default function IgHoroscopePage() {
                     <div>
                       <div style={{
                         fontSize: 14, textTransform: "uppercase",
-                        letterSpacing: 6, color: "#B5A28E",
+                        letterSpacing: 6, color: theme.muted,
                         fontFamily: "'Lexend', 'Montserrat', sans-serif",
                         fontWeight: 200, marginBottom: 10,
                       }}>
@@ -307,17 +395,15 @@ export default function IgHoroscopePage() {
                       </div>
                       <div style={{
                         fontSize: 48, fontWeight: 600,
-                        color: "#1A1A1A",
+                        color: theme.text,
                         fontFamily: "'Fraunces', 'Cormorant Garamond', serif",
                       }}>
                         {h.focus}
                       </div>
                     </div>
-                    <div style={{
-                      textAlign: "right",
-                    }}>
+                    <div style={{ textAlign: "right" }}>
                       <div style={{
-                        fontSize: 16, color: "#B5A28E",
+                        fontSize: 16, color: theme.accent,
                         fontFamily: "'Lexend', 'Montserrat', sans-serif",
                         fontWeight: 200, letterSpacing: 2,
                       }}>
