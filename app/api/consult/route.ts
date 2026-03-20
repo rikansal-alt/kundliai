@@ -42,57 +42,64 @@ const DEBILITATION: Record<string, string> = {
 };
 
 function buildChartSummary(chart: ChartData): string {
-  // Rich chart from /api/generate
-  if (chart.planets && chart.ascendant && typeof chart.ascendant === "object") {
-    const lines: string[] = [
-      "BIRTH CHART:",
-      `Ascendant (Lagna): ${chart.ascendant.sign} ${chart.ascendant.degree.toFixed(1)}° (${chart.ascendant.nakshatra} nakshatra)`,
-      `Moon: ${chart.moonSign}`,
-      `Sun: ${chart.sunSign}`,
-      "",
-      "PLANETARY POSITIONS (Sidereal, Lahiri, Whole Sign):",
-    ];
+  if (!chart || Object.keys(chart).length === 0) return "No chart data available.";
 
+  const lines: string[] = ["BIRTH CHART:"];
+
+  // Ascendant — handle both object and string format
+  const asc = chart.ascendant;
+  if (asc) {
+    if (typeof asc === "object" && asc.sign) {
+      lines.push(`Ascendant (Lagna): ${asc.sign} ${asc.degree?.toFixed?.(1) ?? ""}° ${asc.nakshatra ? `(${asc.nakshatra} nakshatra)` : ""}`);
+    } else {
+      lines.push(`Ascendant (Lagna): ${asc}`);
+    }
+  }
+
+  if (chart.moonSign) lines.push(`Moon Sign: ${chart.moonSign}`);
+  if (chart.sunSign) lines.push(`Sun Sign: ${chart.sunSign}`);
+
+  // Planets
+  if (chart.planets && typeof chart.planets === "object") {
+    lines.push("", "PLANETARY POSITIONS (Sidereal, Lahiri, Whole Sign):");
     const keyPlacements: string[] = [];
 
     for (const [name, p] of Object.entries(chart.planets)) {
-      const retro = p.retrograde ? " [RETROGRADE]" : "";
-      lines.push(
-        `  ${name}: ${p.sign} ${p.degree.toFixed(1)}° — House ${p.house} — ${p.nakshatra} nakshatra (lord: ${p.nakshatraLord})${retro}`
-      );
+      if (!p || typeof p !== "object") continue;
+      const planet = p as PlanetPosition;
+      const retro = planet.retrograde ? " [RETROGRADE]" : "";
+      const deg = typeof planet.degree === "number" ? ` ${planet.degree.toFixed(1)}°` : "";
+      const nak = planet.nakshatra ? ` — ${planet.nakshatra} nakshatra` : "";
+      const lord = planet.nakshatraLord ? ` (lord: ${planet.nakshatraLord})` : "";
+      lines.push(`  ${name}: ${planet.sign}${deg} — House ${planet.house}${nak}${lord}${retro}`);
 
-      // Note exalted/debilitated
-      if (EXALTATION[name] === p.sign) keyPlacements.push(`${name} is EXALTED in ${p.sign}`);
-      if (DEBILITATION[name] === p.sign) keyPlacements.push(`${name} is DEBILITATED in ${p.sign}`);
+      if (EXALTATION[name] === planet.sign) keyPlacements.push(`${name} is EXALTED in ${planet.sign}`);
+      if (DEBILITATION[name] === planet.sign) keyPlacements.push(`${name} is DEBILITATED in ${planet.sign}`);
     }
 
     if (keyPlacements.length > 0) {
       lines.push("", "KEY PLACEMENTS:", ...keyPlacements.map((k) => `  ★ ${k}`));
     }
-
-    if (chart.mahadasha?.current) {
-      const md = chart.mahadasha.current;
-      lines.push(
-        "", "CURRENT DASHA PERIOD:",
-        `  Mahadasha: ${md.planet} (${md.startYear}–${md.endYear}, ~${chart.mahadasha.yearsRemaining ?? "?"} years remaining)`
-      );
-    }
-
-    const today = new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-    lines.push("", `TODAY: ${today}`);
-
-    if (chart.meta?.birthDetails) {
-      lines.push(`Birth location: ${chart.meta.birthDetails.city}`);
-    }
-
-    return lines.join("\n");
   }
 
-  // Fallback: flat legacy format
-  return Object.entries(chart)
-    .filter(([, v]) => typeof v === "string")
-    .map(([k, v]) => `${k}: ${v}`)
-    .join(", ");
+  // Mahadasha — handle multiple formats
+  const md = chart.mahadasha;
+  if (md) {
+    const current = (md as { current?: { planet: string; startYear: number; endYear: number } }).current
+      ?? (md as { currentMahadasha?: { planet: string; endDate: string } }).currentMahadasha;
+    if (current && typeof current === "object" && "planet" in current) {
+      lines.push("", "CURRENT DASHA PERIOD:", `  Mahadasha: ${current.planet}`);
+    }
+  }
+
+  const today = new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  lines.push("", `TODAY: ${today}`);
+
+  if (chart.meta?.birthDetails) {
+    lines.push(`Birth location: ${chart.meta.birthDetails.city}`);
+  }
+
+  return lines.join("\n");
 }
 
 export async function POST(req: NextRequest) {

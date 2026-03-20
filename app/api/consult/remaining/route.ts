@@ -8,9 +8,9 @@ export async function GET(req: NextRequest) {
     const isAuthenticated = !!authCookie;
     const limit = isAuthenticated ? 25 : 10;
 
-    // In development, return 0 used
+    // In development, unlimited
     if (process.env.NODE_ENV === "development") {
-      return NextResponse.json({ used: 0, limit, remaining: limit });
+      return NextResponse.json({ used: 0, limit: 999, remaining: 999 });
     }
 
     const collection = (await db()).collection("ratelimits");

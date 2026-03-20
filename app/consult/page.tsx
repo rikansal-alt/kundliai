@@ -33,27 +33,27 @@ function ConsultContent() {
   // Load chart data from all available sources
   useEffect(() => {
     try {
-      // 1. Try guest session (has full chart object)
-      const guestSession = getGuestSession();
-      if (guestSession?.chartData) {
-        chartDataRef.current = guestSession.chartData as Record<string, unknown>;
-        return;
-      }
-
-      // 2. Try localStorage snapshot (works for both guest and registered)
+      // 1. Try localStorage snapshot FIRST (most reliable, has planets since recent fix)
       const raw = localStorage.getItem("kundliai_chart");
       if (raw) {
         const snap = JSON.parse(raw);
-        if (snap?.moonSign) {
+        if (snap?.moonSign || snap?.planets) {
           chartDataRef.current = snap as Record<string, unknown>;
           return;
         }
+      }
+
+      // 2. Try guest session
+      const guestSession = getGuestSession();
+      if (guestSession?.chartData && Object.keys(guestSession.chartData).length > 0) {
+        chartDataRef.current = guestSession.chartData as Record<string, unknown>;
+        return;
       }
     } catch { /* ignore */ }
 
     // 3. Fetch from DB for registered users
     if (userId) {
-      fetch(`/api/chart/${userId}`)
+      fetch(`/api/chart/load?userId=${encodeURIComponent(userId)}`)
         .then((r) => r.json())
         .then((d) => {
           if (d?.chart?.chartData) {
