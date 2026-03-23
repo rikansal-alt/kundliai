@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
-import { SunIcon, CalendarBlankIcon, ClockIcon, MapPinIcon, ArrowRightIcon, LockIcon, SparkleIcon, StarIcon, ClockCounterClockwiseIcon, CrosshairIcon, CircleNotchIcon, InstagramLogoIcon } from "@phosphor-icons/react";
+import { SunIcon, CalendarBlankIcon, ClockIcon, MapPinIcon, ArrowRightIcon, LockIcon, SparkleIcon, StarIcon, ClockCounterClockwiseIcon, CrosshairIcon, CircleNotchIcon, InstagramLogoIcon, ChartPieIcon, ChatCircleDotsIcon, ShootingStarIcon, HandHeartIcon, MoonIcon, PlanetIcon, SunHorizonIcon } from "@phosphor-icons/react";
 import { saveGuestSession, getGuestSession } from "@/lib/guestSession";
 
 interface PlaceSuggestion {
@@ -355,6 +355,16 @@ export default function LandingPage() {
     { title: "Preparing your personal reading…", sub: "Your chart is unique to the exact minute and place of your birth" },
   ];
 
+  const [showForm, setShowForm] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  function scrollToForm() {
+    setShowForm(true);
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  }
+
   return (
     <div
       className="w-full px-6 flex flex-col items-center mx-auto min-h-screen page-enter"
@@ -363,15 +373,12 @@ export default function LandingPage() {
       {/* Educational loading overlay */}
       {saving && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm px-8">
-          {/* Spinning sun */}
           <div className="mb-10 relative">
             <div className="w-20 h-20 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
               <SunIcon className="text-primary w-8 h-8" weight="thin" />
             </div>
           </div>
-
-          {/* Steps */}
           <div className="space-y-6 max-w-[300px]">
             {LOADING_STEPS.map((step, i) => (
               <div
@@ -387,8 +394,6 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-
-          {/* Progress dots */}
           <div className="flex gap-2 mt-10">
             {[0, 1, 2].map((i) => (
               <div
@@ -401,190 +406,338 @@ export default function LandingPage() {
         </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* HERO SECTION                                                          */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+
       {/* Logo */}
-      <div className="mb-6 flex justify-center">
+      <div className="mb-4 flex justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="KundliAI" className="w-20 h-20 object-contain" />
       </div>
 
-      {/* Header */}
-      <header className="text-center mb-10">
+      <header className="text-center mb-6">
         <h1 className="fraunces-italic text-5xl text-primary font-bold mb-2">KundliAI</h1>
-        <p className="text-xs tracking-[0.2em] font-medium text-slate-500 uppercase">Vedic Astrology · AI · Ancient Wisdom</p>
+        <p className="text-sm text-slate-600 leading-relaxed max-w-[300px] mx-auto">
+          Your personal Vedic astrology guide, powered by AI. Understand your birth chart in plain English.
+        </p>
       </header>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="w-full space-y-5">
-        {error && (
-          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
-            {error}
-          </div>
-        )}
+      {/* Primary CTA */}
+      <button
+        onClick={scrollToForm}
+        className="w-full h-14 text-white font-bold rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-lg mb-10"
+        style={{
+          background: "linear-gradient(135deg, #d6880a 0%, #f5c200 100%)",
+          boxShadow: "0 4px 20px rgba(214,136,10,0.35), inset 0 1px 0 rgba(255,255,255,0.2)",
+        }}
+      >
+        Get My Free Kundli <ArrowRightIcon className="w-5 h-5" />
+      </button>
 
-        {/* Full Name */}
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-700 ml-1">Full Name</label>
-          <input
-            className="w-full h-14 bg-primary/5 border border-slate-200 rounded-xl px-5 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 outline-none"
-            placeholder="Arjun Sharma"
-            type="text"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-        </div>
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* EVERYTHING INSIDE                                                     */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
 
-        {/* Date of Birth */}
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-700 ml-1">Date of Birth</label>
-          <div className="relative flex items-center">
-            <input
-              className="w-full h-14 bg-primary/5 border border-slate-200 rounded-xl px-5 pr-12 text-slate-900 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 outline-none appearance-none cursor-pointer"
-              type="date"
-              value={form.dob}
-              onChange={(e) => setForm({ ...form, dob: e.target.value })}
-              max={new Date().toISOString().split("T")[0]}
-              suppressHydrationWarning
-              required
-            />
-            <CalendarBlankIcon className="absolute right-4 text-slate-400 w-5 h-5 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Time of Birth */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center ml-1">
-            <label className="text-sm font-semibold text-slate-700">Time of Birth</label>
-            <span className="text-[10px] uppercase text-slate-400 font-bold">Optional</span>
-          </div>
-          <div className="relative flex items-center">
-            <input
-              className="w-full h-14 bg-primary/5 border border-slate-200 rounded-xl px-5 pr-12 text-slate-900 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 outline-none appearance-none cursor-pointer"
-              type="time"
-              value={form.time}
-              onChange={(e) => setForm({ ...form, time: e.target.value })}
-            />
-            <ClockIcon className="absolute right-4 text-slate-400 w-5 h-5 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* City of Birth */}
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-700 ml-1">City of Birth</label>
-
-          {/* Detect location button */}
-          <button
-            type="button"
-            onClick={detectLocation}
-            disabled={detecting}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-xl border border-primary/30 text-primary text-sm font-semibold bg-primary/5 hover:bg-primary/10 active:scale-[0.98] transition-all disabled:opacity-60"
-          >
-            {detecting
-              ? <><CircleNotchIcon className="w-4 h-4 animate-spin" /> Detecting…</>
-              : <><CrosshairIcon className="w-4 h-4" /> Use My Current Location</>
-            }
-          </button>
-
-          <div className="relative" ref={dropdownRef}>
-            <div className="relative flex items-center">
-              <input
-                className="w-full h-14 bg-primary/5 border border-slate-200 rounded-xl px-5 pr-12 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 outline-none"
-                placeholder="Mumbai, India"
-                type="text"
-                value={form.city}
-                onChange={(e) => onCityChange(e.target.value)}
-                autoComplete="off"
-                required
-              />
-              <div className="absolute right-4 text-slate-400">
-                {searching
-                  ? <CircleNotchIcon className="w-4 h-4 animate-spin" />
-                  : <MapPinIcon className="w-5 h-5" />
-                }
+      <section className="w-full mb-10">
+        <h2 className="text-xs tracking-[0.2em] font-bold text-slate-400 uppercase text-center mb-5">Everything inside</h2>
+        <div className="space-y-3">
+          {[
+            {
+              icon: ChartPieIcon,
+              title: "Birth Chart (Kundli)",
+              desc: "See all 9 planets placed across the 12 houses. North Indian, South Indian, and Bengali chart styles with plain-English explanations.",
+            },
+            {
+              icon: ChatCircleDotsIcon,
+              title: "AI Consultation",
+              desc: "Ask anything — career, relationships, health, finances. Get personalised answers based on your unique chart, not generic horoscopes.",
+            },
+            {
+              icon: HandHeartIcon,
+              title: "Compatibility (Gun Milan)",
+              desc: "Enter your partner's details and get an 8-koot compatibility score with colour-coded results and remedies for weak matches.",
+            },
+            {
+              icon: MoonIcon,
+              title: "Daily Panchang",
+              desc: "Today's tithi, nakshatra, yoga, karana, sunrise/sunset, Rahu Kaal, and auspicious muhurats — all in your local timezone.",
+            },
+            {
+              icon: SunHorizonIcon,
+              title: "Daily Horoscope",
+              desc: "Personalised predictions for morning, afternoon, and evening based on your ascendant, moon, and sun signs. Plus lucky colour and number.",
+            },
+            {
+              icon: PlanetIcon,
+              title: "Live Transits",
+              desc: "Track where planets are right now, which houses they're activating in your chart, and what themes are in play this week.",
+            },
+            {
+              icon: ShootingStarIcon,
+              title: "Dasha Timeline",
+              desc: "See your current Mahadasha and Bhukti periods — the Vedic timing system that reveals which planet is driving your life right now.",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="flex items-start gap-4 bg-white rounded-2xl px-4 py-4"
+              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
+            >
+              <div className="bg-primary/8 p-2.5 rounded-xl shrink-0">
+                <item.icon size={22} weight="duotone" className="text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                <p className="text-[12px] text-slate-500 leading-relaxed mt-0.5">{item.desc}</p>
               </div>
             </div>
+          ))}
+        </div>
+      </section>
 
-            {/* Autocomplete dropdown */}
-            {suggestions.length > 0 && (
-              <ul className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
-                {suggestions.map((s, i) => (
-                  <li key={i}>
-                    <button
-                      type="button"
-                      onMouseDown={() => selectSuggestion(s)}
-                      className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-primary/5 transition-colors border-b border-slate-100 last:border-0"
-                    >
-                      <MapPinIcon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                      <span className="text-sm text-slate-700 leading-snug line-clamp-2">{s.display_name}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* HOW IT WORKS                                                          */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+
+      <section className="w-full mb-10">
+        <h2 className="text-xs tracking-[0.2em] font-bold text-slate-400 uppercase text-center mb-5">How it works</h2>
+        <div className="space-y-4">
+          {[
+            {
+              step: "1",
+              icon: CalendarBlankIcon,
+              title: "Enter your birth details",
+              desc: "Name, date, time (optional), and city of birth. Takes 30 seconds.",
+            },
+            {
+              step: "2",
+              icon: StarIcon,
+              title: "We calculate your chart",
+              desc: "Real astronomical data positions all 9 Vedic planets across the 12 houses.",
+            },
+            {
+              step: "3",
+              icon: SparkleIcon,
+              title: "AI reads your chart",
+              desc: "Get your ascendant, moon sign, current dasha, and what it all means for you.",
+            },
+          ].map((item, i) => (
+            <div key={item.step} className="flex items-start gap-4">
+              <div className="flex flex-col items-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">
+                  {item.step}
+                </div>
+                {i < 2 && <div className="w-px h-6 bg-primary/20 mt-1" />}
+              </div>
+              <div className="pb-2">
+                <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                <p className="text-[12px] text-slate-500 leading-relaxed mt-0.5">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TRUST BADGES                                                          */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+
+      <div className="flex justify-center gap-6 mb-10">
+        {[
+          { label: "100% Free",       icon: SparkleIcon },
+          { label: "No Sign-up Needed", icon: LockIcon },
+          { label: "Vedic Tradition",  icon: ClockCounterClockwiseIcon },
+        ].map((feat) => (
+          <div key={feat.label} className="flex flex-col items-center">
+            <div className="bg-primary/5 p-3 rounded-full mb-2">
+              <feat.icon size={20} weight="thin" className="text-primary" />
+            </div>
+            <span className="text-[10px] text-slate-500 font-medium text-center leading-tight">{feat.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* FORM SECTION                                                          */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+
+      <div ref={formRef} className={`w-full transition-all duration-500 ${showForm ? "opacity-100" : "opacity-100"}`}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-xs tracking-[0.15em] font-bold text-slate-400 uppercase">Enter your details</span>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
+        <form onSubmit={handleSubmit} className="w-full space-y-5">
+          {error && (
+            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Full Name */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 ml-1">Full Name</label>
+            <input
+              className="w-full h-14 bg-primary/5 border border-slate-200 rounded-xl px-5 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 outline-none"
+              placeholder="Arjun Sharma"
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+          </div>
+
+          {/* Date of Birth */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 ml-1">Date of Birth</label>
+            <div className="relative flex items-center">
+              <input
+                className="w-full h-14 bg-primary/5 border border-slate-200 rounded-xl px-5 pr-12 text-slate-900 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 outline-none appearance-none cursor-pointer"
+                type="date"
+                value={form.dob}
+                onChange={(e) => setForm({ ...form, dob: e.target.value })}
+                max={new Date().toISOString().split("T")[0]}
+                suppressHydrationWarning
+                required
+              />
+              <CalendarBlankIcon className="absolute right-4 text-slate-400 w-5 h-5 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Time of Birth */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center ml-1">
+              <label className="text-sm font-semibold text-slate-700">Time of Birth</label>
+              <span className="text-[10px] uppercase text-slate-400 font-bold">Optional</span>
+            </div>
+            <div className="relative flex items-center">
+              <input
+                className="w-full h-14 bg-primary/5 border border-slate-200 rounded-xl px-5 pr-12 text-slate-900 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 outline-none appearance-none cursor-pointer"
+                type="time"
+                value={form.time}
+                onChange={(e) => setForm({ ...form, time: e.target.value })}
+              />
+              <ClockIcon className="absolute right-4 text-slate-400 w-5 h-5 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* City of Birth */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 ml-1">City of Birth</label>
+
+            <button
+              type="button"
+              onClick={detectLocation}
+              disabled={detecting}
+              className="w-full h-11 flex items-center justify-center gap-2 rounded-xl border border-primary/30 text-primary text-sm font-semibold bg-primary/5 hover:bg-primary/10 active:scale-[0.98] transition-all disabled:opacity-60"
+            >
+              {detecting
+                ? <><CircleNotchIcon className="w-4 h-4 animate-spin" /> Detecting…</>
+                : <><CrosshairIcon className="w-4 h-4" /> Use My Current Location</>
+              }
+            </button>
+
+            <div className="relative" ref={dropdownRef}>
+              <div className="relative flex items-center">
+                <input
+                  className="w-full h-14 bg-primary/5 border border-slate-200 rounded-xl px-5 pr-12 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 outline-none"
+                  placeholder="Mumbai, India"
+                  type="text"
+                  value={form.city}
+                  onChange={(e) => onCityChange(e.target.value)}
+                  autoComplete="off"
+                  required
+                />
+                <div className="absolute right-4 text-slate-400">
+                  {searching
+                    ? <CircleNotchIcon className="w-4 h-4 animate-spin" />
+                    : <MapPinIcon className="w-5 h-5" />
+                  }
+                </div>
+              </div>
+
+              {suggestions.length > 0 && (
+                <ul className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+                  {suggestions.map((s, i) => (
+                    <li key={i}>
+                      <button
+                        type="button"
+                        onMouseDown={() => selectSuggestion(s)}
+                        className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-primary/5 transition-colors border-b border-slate-100 last:border-0"
+                      >
+                        <MapPinIcon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                        <span className="text-sm text-slate-700 leading-snug line-clamp-2">{s.display_name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {coords && (
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-primary">✓ Location set</span>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+                </span>
+              </div>
             )}
           </div>
 
-          {/* Confirmed coords badge */}
-          {coords && (
-            <div className="flex items-center gap-2 px-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-primary">✓ Location set</span>
-              <span className="text-[11px] text-slate-400 font-mono">
-                {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
-              </span>
-            </div>
-          )}
-        </div>
+          {/* Submit */}
+          <button
+            className="w-full h-14 mt-8 text-white font-bold rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-70"
+            style={{
+              background: "linear-gradient(135deg, #d6880a 0%, #f5c200 100%)",
+              boxShadow: "0 4px 20px rgba(214,136,10,0.35), inset 0 1px 0 rgba(255,255,255,0.2)",
+            }}
+            type="submit"
+            disabled={saving}
+          >
+            {saving ? "Calculating your chart…" : "View My Kundli"}
+            {!saving && <ArrowRightIcon className="w-5 h-5" />}
+          </button>
 
-        {/* CTA */}
-        <button
-          className="w-full h-14 mt-8 text-white font-bold rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-70"
-          style={{
-            background: "linear-gradient(135deg, #d6880a 0%, #f5c200 100%)",
-            boxShadow: "0 4px 20px rgba(214,136,10,0.35), inset 0 1px 0 rgba(255,255,255,0.2)",
-          }}
-          type="submit"
-          disabled={saving}
-        >
-          {saving ? "Calculating your chart…" : "View My Kundli"}
-          {!saving && <ArrowRightIcon className="w-5 h-5" />}
-        </button>
+          {/* Divider */}
+          <div className="flex items-center gap-3 mt-6">
+            <div className="flex-1 h-px bg-slate-200" />
+            <span className="text-xs text-slate-400 font-medium">or</span>
+            <div className="flex-1 h-px bg-slate-200" />
+          </div>
 
-        {/* ── or ── divider */}
-        <div className="flex items-center gap-3 mt-6">
-          <div className="flex-1 h-px bg-slate-200" />
-          <span className="text-xs text-slate-400 font-medium">or</span>
-          <div className="flex-1 h-px bg-slate-200" />
-        </div>
+          {/* Google sign-in */}
+          <button
+            type="button"
+            onClick={() => { setGoogleSigningIn(true); signIn("google"); }}
+            disabled={googleSigningIn}
+            className="mt-6 w-full h-12 flex items-center justify-center gap-3 rounded-2xl bg-white font-semibold text-slate-700 text-sm active:scale-[0.98] transition-all disabled:opacity-60"
+            style={{ border: "1.5px solid rgba(214,136,10,0.3)", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+          >
+            {googleSigningIn ? (
+              <CircleNotchIcon className="w-5 h-5 animate-spin text-slate-400" />
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.6 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 2.9l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.3 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.9L6.1 33.3C9.4 39.5 16.2 44 24 44z"/>
+                <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.4 4.2-4.4 5.5l6.2 5.2C41.7 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/>
+              </svg>
+            )}
+            Continue with Google
+          </button>
 
-        {/* Google sign-in */}
-        <button
-          type="button"
-          onClick={() => { setGoogleSigningIn(true); signIn("google"); }}
-          disabled={googleSigningIn}
-          className="mt-6 w-full h-12 flex items-center justify-center gap-3 rounded-2xl bg-white font-semibold text-slate-700 text-sm active:scale-[0.98] transition-all disabled:opacity-60"
-          style={{ border: "1.5px solid rgba(214,136,10,0.3)", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
-        >
-          {googleSigningIn ? (
-            <CircleNotchIcon className="w-5 h-5 animate-spin text-slate-400" />
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.6 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
-              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 2.9l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
-              <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.3 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.9L6.1 33.3C9.4 39.5 16.2 44 24 44z"/>
-              <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.4 4.2-4.4 5.5l6.2 5.2C41.7 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/>
-            </svg>
-          )}
-          Continue with Google
-        </button>
-
-        <p className="mt-3 text-center text-[11px] text-slate-400 leading-relaxed">
-          Returning user? Your saved chart will load automatically.
-        </p>
-      </form>
+          <p className="mt-3 text-center text-[11px] text-slate-400 leading-relaxed">
+            Returning user? Your saved chart will load automatically.
+          </p>
+        </form>
+      </div>
 
       {/* Footer */}
       <footer className="mt-8 text-center space-y-4">
         <div className="flex items-center justify-center gap-2 text-slate-400">
-          <LockIcon className="w-3 h-3" />
+          <LockIcon className="w-3 h-3 shrink-0" />
           <p className="text-[11px] leading-relaxed max-w-[280px]">
             Your birth details are only used to calculate your chart. We never share your personal information.
           </p>
@@ -606,20 +759,6 @@ export default function LandingPage() {
         <p className="text-[9px] text-slate-300 text-center">
           For entertainment purposes only. Not a substitute for professional advice.
         </p>
-        <div className="pt-10 flex justify-center gap-6">
-          {[
-            { label: "AI Powered",      icon: SparkleIcon },
-            { label: "Precise Charts",  icon: StarIcon    },
-            { label: "Vedic Tradition", icon: ClockCounterClockwiseIcon },
-          ].map((feat) => (
-            <div key={feat.label} className="flex flex-col items-center">
-              <div className="bg-primary/5 p-3 rounded-full mb-2">
-                <feat.icon size={20} weight="thin" className="text-primary" />
-              </div>
-              <span className="text-[10px] text-slate-500 font-medium">{feat.label}</span>
-            </div>
-          ))}
-        </div>
       </footer>
     </div>
   );
