@@ -85,7 +85,7 @@ test.describe("Full User Flow E2E", () => {
       }));
     });
 
-    await page.goto(BASE + "/home?name=TestUser");
+    await page.goto(BASE + "/home?name=TestUser", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Edit" }).click();
     await page.waitForURL("**/?new=1&edit=1");
     await page.waitForTimeout(1000);
@@ -281,5 +281,71 @@ test.describe("Full User Flow E2E", () => {
     expect(typeof data.used).toBe("number");
     expect(typeof data.limit).toBe("number");
     expect(typeof data.remaining).toBe("number");
+  });
+
+  // ─── Event Tracking ──────────────────────────────────────────────────
+
+  test("Track API logs event with valid payload", async ({ request }) => {
+    const res = await request.post(BASE + "/api/track", {
+      data: { userId: "pw_test_user", action: "page_view", metadata: { page: "home" } },
+    });
+    expect(res.status()).toBe(200);
+    const data = await res.json();
+    expect(data.ok).toBe(true);
+  });
+
+  test("Track API rejects missing userId", async ({ request }) => {
+    const res = await request.post(BASE + "/api/track", {
+      data: { action: "page_view" },
+    });
+    expect(res.status()).toBe(400);
+  });
+
+  test("Track API rejects missing action", async ({ request }) => {
+    const res = await request.post(BASE + "/api/track", {
+      data: { userId: "pw_test_user" },
+    });
+    expect(res.status()).toBe(400);
+  });
+
+  test("Home page fires tracking beacon on load", async ({ page }) => {
+    const trackRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/api/track")) trackRequests.push(req.url());
+    });
+
+    await page.goto(BASE);
+    await page.evaluate(() => {
+      localStorage.setItem("kundliai_chart", JSON.stringify({
+        name: "TrackTest", ascendant: "Aries", moonSign: "Taurus", sunSign: "Leo", userId: "pw_test_user",
+      }));
+    });
+    await page.goto(BASE + "/home?name=TrackTest");
+    await page.waitForTimeout(2000);
+    expect(trackRequests.length).toBeGreaterThan(0);
+  });
+
+  test("Daily page fires tracking beacon on load", async ({ page }) => {
+    const trackRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/api/track")) trackRequests.push(req.url());
+    });
+
+    await page.goto(BASE);
+    await page.evaluate(() => {
+      localStorage.setItem("kundliai_chart", JSON.stringify({
+        name: "TrackTest", ascendant: "Aries", moonSign: "Taurus", sunSign: "Leo", userId: "pw_test_user",
+      }));
+    });
+    await page.goto(BASE + "/daily");
+    await page.waitForTimeout(2000);
+    expect(trackRequests.length).toBeGreaterThan(0);
+  });
+
+  // ─── Auth: Google button hidden for authenticated flow ────────────────
+
+  test("Landing page with ?new=1 shows Google sign-in for guests", async ({ page }) => {
+    await page.goto(BASE + "/?new=1");
+    await expect(page.getByText("Continue with Google")).toBeVisible({ timeout: 5000 });
   });
 });
