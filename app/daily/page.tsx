@@ -10,6 +10,7 @@ import {
   ClockIcon,
   SparkleIcon,
 } from "@phosphor-icons/react";
+import { trackEvent } from "@/lib/trackEvent";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -359,6 +360,7 @@ export default function DailyGuidancePage() {
       }
     } catch { /* ignore */ }
     setIsLoaded(true);
+    trackEvent("page_view", { page: "daily" });
 
     // Fetch transit-aware predictions
     try {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { SunIcon, CalendarBlankIcon, ClockIcon, MapPinIcon, ArrowRightIcon, LockIcon, SparkleIcon, StarIcon, ClockCounterClockwiseIcon, CrosshairIcon, CircleNotchIcon, InstagramLogoIcon, ChartPieIcon, ChatCircleDotsIcon, ShootingStarIcon, HandHeartIcon, MoonIcon, PlanetIcon, SunHorizonIcon } from "@phosphor-icons/react";
 import { saveGuestSession, getGuestSession } from "@/lib/guestSession";
+import { trackEvent } from "@/lib/trackEvent";
 
 interface PlaceSuggestion {
   display_name: string;
@@ -332,6 +333,8 @@ export default function LandingPage() {
         // DB save is non-blocking; chart is already in localStorage
         console.error("Chart save failed:", saveErr);
       }
+
+      trackEvent("chart_created", { city: form.city });
 
       const params = new URLSearchParams({
         name: form.name,

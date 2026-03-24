@@ -9,6 +9,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { migrateGuestData } from "@/lib/migrateGuestData";
 import SoftLoginPrompt from "@/components/SoftLoginPrompt";
 import ProfileSheet from "@/components/ProfileSheet";
+import { trackEvent } from "@/lib/trackEvent";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -96,6 +97,7 @@ function HomeContent() {
       if (raw) setChart(JSON.parse(raw) as ChartSnap);
     } catch { /* ignore */ }
     setIsLoaded(true);
+    trackEvent("page_view", { page: "home" });
   }, []);
 
   // After Google sign-in: migrate guest data then update localStorage

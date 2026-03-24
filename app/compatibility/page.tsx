@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeftIcon, ShareNetworkIcon, PlusIcon, StarIcon, UserIcon, CircleNotchIcon, WarningIcon, HandHeartIcon, SparkleIcon, MagicWandIcon, ArrowRightIcon } from "@phosphor-icons/react";
 import RemediesSheet from "@/components/RemediesSheet";
+import { trackEvent } from "@/lib/trackEvent";
 import { useNavContext } from "@/context/NavContext";
 import {
   calcGunMilan,
@@ -324,6 +325,7 @@ export default function CompatibilityPage() {
       }
 
       const result = calcGunMilan(userNak, userSgn, partnerNak, partnerSgn);
+      trackEvent("compatibility_check", { score: result.totalScore });
       const partnerMoonLabel = data.chart?.moonSign ? `${data.chart.moonSign} Moon` : "";
       setGunMilan(result);
       setPartner(formWithDob);

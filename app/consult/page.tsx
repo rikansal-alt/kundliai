@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { SparkleIcon, PaperPlaneTiltIcon, PlusCircleIcon, UserIcon } from "@phosphor-icons/react";
 import SoftLoginPrompt from "@/components/SoftLoginPrompt";
 import { getGuestSession } from "@/lib/guestSession";
+import { trackEvent } from "@/lib/trackEvent";
 
 interface Message {
   id: string;
@@ -135,6 +136,7 @@ function ConsultContent() {
       return;
     }
 
+    trackEvent("consult_message", { messageLength: text.trim().length });
     const userMsg: Message = { id: Date.now().toString(), role: "user", text };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
