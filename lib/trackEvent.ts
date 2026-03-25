@@ -7,6 +7,9 @@ export function trackEvent(
   metadata?: Record<string, unknown>,
 ) {
   try {
+    // Skip tracking on localhost
+    if (location.hostname === "localhost" || location.hostname === "127.0.0.1") return;
+
     const raw = localStorage.getItem("kundliai_chart");
     const snap = raw ? JSON.parse(raw) : {};
     const userId = snap.userId || "anonymous";
