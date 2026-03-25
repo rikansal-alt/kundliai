@@ -280,9 +280,10 @@ export default function PanchangPage() {
                 <p className="text-xs text-slate-500">Find auspicious times for business, travel &amp; marriage</p>
               </div>
               <button
+                onClick={() => router.push("/muhurat")}
                 className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-full shadow-md shadow-primary/20 active:scale-95 transition-all"
               >
-                Coming Soon
+                Try Now
               </button>
             </div>
           </div>

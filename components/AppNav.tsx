@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import BottomNav from "./BottomNav";
 import { useNavContext } from "@/context/NavContext";
 
-const NAV_ROUTES = ["/home", "/kundli", "/panchang", "/compatibility", "/transits", "/settings", "/daily"];
+const NAV_ROUTES = ["/home", "/kundli", "/panchang", "/compatibility", "/transits", "/settings", "/daily", "/muhurat"];
 
 export default function AppNav() {
   const pathname = usePathname();

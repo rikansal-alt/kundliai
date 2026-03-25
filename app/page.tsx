@@ -86,6 +86,9 @@ export default function LandingPage() {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [saving]);
 
+  // Track landing page view
+  useEffect(() => { trackEvent("page_view", { page: "landing" }); }, []);
+
   // Returning guest: if they already have a chart in localStorage, go straight to /home
   // Skip redirect if ?new=1 is in the URL (user wants to create a new chart)
   useEffect(() => {

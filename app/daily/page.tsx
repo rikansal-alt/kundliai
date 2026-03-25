@@ -9,6 +9,7 @@ import {
   MoonIcon,
   ClockIcon,
   SparkleIcon,
+  WhatsappLogoIcon,
 } from "@phosphor-icons/react";
 import { trackEvent } from "@/lib/trackEvent";
 
@@ -422,7 +423,7 @@ export default function DailyGuidancePage() {
 
   const handleShare = async () => {
     if (!guidance) return;
-    const text = `My Daily Vedic Guidance for ${todayFormatted}:\n\n${guidance.prediction}\n\nLucky Color: ${guidance.luckyColor}\nLucky Number: ${guidance.luckyNumber}\n\n— KundliAI`;
+    const text = `My Daily Vedic Guidance for ${todayFormatted}:\n\n${guidance.prediction}\n\nLucky Color: ${guidance.luckyColor}\nLucky Number: ${guidance.luckyNumber}\n\nGet your free Kundli reading:\nhttps://kundliai.app`;
     if (navigator.share) {
       try {
         await navigator.share({ title: "Daily Guidance — KundliAI", text });
@@ -617,6 +618,31 @@ export default function DailyGuidancePage() {
                 ))}
               </div>
             </div>
+          </section>
+
+          {/* ── WhatsApp Share ── */}
+          <section className="px-6 pb-4">
+            <button
+              onClick={() => {
+                const text = `My Daily Vedic Guidance for ${todayFormatted}:\n\n"${guidance.prediction}"\n\nLucky Color: ${guidance.luckyColor} · Lucky Number: ${guidance.luckyNumber}\n\nGet your free Kundli reading:\nhttps://kundliai.app`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                trackEvent("whatsapp_share", { page: "daily" });
+              }}
+              className="w-full rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
+              style={{
+                background: "linear-gradient(135deg, rgba(37,211,102,0.08) 0%, rgba(37,211,102,0.15) 100%)",
+                border: "1px solid rgba(37,211,102,0.25)",
+              }}
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(37,211,102,0.15)" }}>
+                <WhatsappLogoIcon size={22} weight="fill" style={{ color: "#25D366" }} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold text-slate-800">Share on WhatsApp</p>
+                <p className="text-[11px] text-slate-400">Send today's guidance to friends & family</p>
+              </div>
+              <span style={{ color: "#25D366" }} className="text-lg">→</span>
+            </button>
           </section>
         </>
       )}

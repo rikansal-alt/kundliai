@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, useRef, useCallback, ComponentType } fro
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { SunIcon, MoonIcon, PlanetIcon, RobotIcon, HandHeartIcon, BinocularsIcon, SparkleIcon } from "@phosphor-icons/react";
+import { SunIcon, MoonIcon, PlanetIcon, RobotIcon, HandHeartIcon, BinocularsIcon, SparkleIcon, WhatsappLogoIcon, MagicWandIcon } from "@phosphor-icons/react";
 import useEmblaCarousel from "embla-carousel-react";
 import { migrateGuestData } from "@/lib/migrateGuestData";
 import SoftLoginPrompt from "@/components/SoftLoginPrompt";
@@ -389,6 +389,37 @@ function HomeContent() {
         </section>
       )}
 
+      {/* ── WhatsApp Share ── */}
+      {chart && (
+        <section className="px-6 pb-2">
+          <button
+            onClick={() => {
+              const ascSign = typeof chart.ascendant === "object" ? (chart.ascendant as { sign?: string }).sign : chart.ascendant;
+              const text = `Check out my Vedic birth chart on KundliAI!\n\n` +
+                `${chart.name} — ${ascSign} Ascendant · ${chart.moonSign} Moon` +
+                (summary?.oneWord ? ` · "${summary.oneWord}"` : "") +
+                `\n\nGet your free Kundli reading:\nhttps://kundliai.app`;
+              window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+              trackEvent("whatsapp_share", { page: "home" });
+            }}
+            className="w-full rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
+            style={{
+              background: "linear-gradient(135deg, rgba(37,211,102,0.08) 0%, rgba(37,211,102,0.15) 100%)",
+              border: "1px solid rgba(37,211,102,0.25)",
+            }}
+          >
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(37,211,102,0.15)" }}>
+              <WhatsappLogoIcon size={22} weight="fill" style={{ color: "#25D366" }} />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold text-slate-800">Share your Kundli</p>
+              <p className="text-[11px] text-slate-400">Send your chart highlights to friends & family</p>
+            </div>
+            <span style={{ color: "#25D366" }} className="text-lg">→</span>
+          </button>
+        </section>
+      )}
+
       {/* ── Hero Card Carousel ── */}
       <section className="px-6 py-4">
         <div className="overflow-hidden" ref={emblaRef}>
@@ -600,6 +631,8 @@ function HomeContent() {
           { id: "/consult",       title: "Consult",        sub: "AI Astrologer", icon: RobotIcon,      color: "#6366f1", bg: "rgba(99,102,241,0.07)",  border: "rgba(99,102,241,0.14)" },
           { id: "/compatibility", title: "Compatibility",  sub: "Gun Milan",     icon: HandHeartIcon,  color: "#f43f5e", bg: "rgba(244,63,94,0.07)",   border: "rgba(244,63,94,0.14)"  },
           { id: "/transits",      title: "Transits",       sub: "Gochar",        icon: BinocularsIcon, color: "#0d9488", bg: "rgba(13,148,136,0.07)",  border: "rgba(13,148,136,0.14)" },
+          { id: "/muhurat",       title: "Muhurat",        sub: "Auspicious Dates", icon: MagicWandIcon, color: "#8b5cf6", bg: "rgba(139,92,246,0.07)", border: "rgba(139,92,246,0.14)" },
+          { id: "/panchang",      title: "Panchang",       sub: "Vedic Calendar",   icon: SunIcon,        color: "#d97706", bg: "rgba(217,119,6,0.07)",  border: "rgba(217,119,6,0.14)" },
         ].map((item) => (
           <div
             key={item.id}
